@@ -1,0 +1,141 @@
+//-----------------------------------------------------------------------------
+//	VPHYSICS_JOLT_INC.INC
+//
+//	Project Script
+//-----------------------------------------------------------------------------
+
+$MacroRequired		"PROJNAME"
+
+$Macro SRCDIR		"..\.."
+$Macro OUTBINDIR	"$SRCDIR\..\$GAMEDIR\bin"
+
+$Include "$SRCDIR\vpc_scripts\source_dll_base.vpc"
+
+$Include "..\joltphysics\joltphysics_settings.vpc"
+
+$Configuration
+{
+	$Compiler
+	{
+		$Create/UsePrecompiledHeader	"Use Precompiled Header (/Yu)"
+		$Create/UsePCHThroughFile		"cbase.h"
+	}
+}
+
+$Project "$PROJNAME"
+{
+	$Folder	"Precompiled Header"
+	{
+		$File	"cbase.h"
+		$File	"cbase.cpp"
+		{
+			$Configuration
+			{
+				$Compiler
+				{
+					$Create/UsePrecompiledHeader	"Create Precompiled Header (/Yc)"
+				}
+			}
+		}
+	}
+	
+	$Folder	"Source Files"
+	{
+		$Folder "Public Files"
+		{
+			$File	"$SRCDIR\public\collisionutils.cpp"	\
+					"$SRCDIR\public\filesystem_helpers.cpp"
+			{
+				$Configuration
+				{
+					$Compiler
+					{
+						$Create/UsePrecompiledHeader	"Not Using Precompiled Headers"
+					}
+				}
+			}
+		}
+		
+		$File	"vjolt_collide.cpp"
+		$File	"vjolt_collide_trace.cpp"
+		$File	"vjolt_constraints.cpp"
+		$File	"vjolt_controller_fluid.cpp"
+		$File	"vjolt_controller_motion.cpp"
+		$File	"vjolt_controller_player.cpp"
+		$File	"vjolt_controller_vehicle.cpp"
+		$File	"vjolt_controller_shadow.cpp"
+		$File	"vjolt_debugrender.cpp"
+		$File	"vjolt_environment.cpp"
+		$File	"vjolt_friction.cpp"
+		$File	"vjolt_interface.cpp"
+		$File	"vjolt_keyvalues_schema.cpp"
+		$File	"vjolt_object.cpp"
+		$File	"vjolt_objectpairhash.cpp"
+		$File	"vjolt_parse.cpp"
+		$File	"vjolt_querymodel.cpp"
+		$File	"vjolt_surfaceprops.cpp"
+	}
+
+	$Folder	"Header Files"
+	{
+		$Folder "Public Files"
+		{
+			$File	"$SRCDIR\public\collisionutils.h"
+			$File	"$SRCDIR\public\datamap.h"
+			$File	"$SRCDIR\public\filesystem_helpers.h"
+			$File	"$SRCDIR\public\vcollide_parse.h"
+			$File	"$SRCDIR\public\vcollide.h"
+		}
+		
+		$Folder "Compatibility"
+		{
+			$File	"compat\better_winlite.h"
+			$File	"compat\branch_overrides.h"
+			$File	"compat\compat_sdk2013.h"
+		}
+		
+		$File	"vjolt_callstack.h"
+		$File	"vjolt_collide.h"
+		$File	"vjolt_constraints.h"
+		$File	"vjolt_controller_fluid.h"
+		$File	"vjolt_controller_motion.h"
+		$File	"vjolt_controller_player.h"
+		$File	"vjolt_controller_vehicle.h"
+		$File	"vjolt_controller_shadow.h"
+		$File	"vjolt_debugrender.h"
+		$File	"vjolt_environment.h"
+		$File	"vjolt_friction.h"
+		$File	"vjolt_interface.h"
+		$File	"vjolt_internal_listeners.h"
+		$File	"vjolt_keyvalues_schema.h"
+		$File	"vjolt_layers.h"
+		$File	"vjolt_listener_contact.h"
+		$File	"vjolt_object.h"
+		$File	"vjolt_objectpairhash.h"
+		$File	"vjolt_parse.h"
+		$File	"vjolt_querymodel.h"
+		$File	"vjolt_state_recorder_file.h"
+		$File	"vjolt_surfaceprops.h"
+		$File	"vjolt_util.h"
+	}
+	
+	$Folder "Interface"
+	{
+		$File	"$SRCDIR\public\vphysics_interface.h"
+		$File	"$SRCDIR\public\vphysics\collision_set.h"
+		$File	"$SRCDIR\public\vphysics\constraints.h"
+		$File	"$SRCDIR\public\vphysics\friction.h"
+		$File	"$SRCDIR\public\vphysics\object_hash.h"
+		$File	"$SRCDIR\public\vphysics\performance.h"
+		$File	"$SRCDIR\public\vphysics\player_controller.h"
+		$File	"$SRCDIR\public\vphysics\stats.h"
+		$File	"$SRCDIR\public\vphysics\vehicles.h"
+	}
+
+	$Folder	"Link Libraries"
+	{
+		$Lib	"joltphysics"
+		$Lib	"mathlib"
+		$Lib	"tier2"
+	}
+}

@@ -1,0 +1,9 @@
+//-----------------------------------------------------------------------------
+//	VPHYSICS_JOLT_STATIC.VPC
+//
+//	Project Script
+//-----------------------------------------------------------------------------
+
+$Macro PROJNAME		"vphysics_jolt_static"
+
+$Include "vphysics_jolt_inc.vpc"

@@ -1,0 +1,7 @@
+# This file is here so GitHub uses 4-space tabs...
+
+root = true
+
+[*]
+indent_style = tab
+indent_size = 4

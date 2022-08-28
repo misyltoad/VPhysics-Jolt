@@ -1,0 +1,3 @@
+[submodule "joltphysics/src"]
+	path = joltphysics/src
+	url = https://github.com/jrouwe/JoltPhysics/
