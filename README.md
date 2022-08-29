@@ -95,6 +95,6 @@ For each release, binary builds are provided for Garry's Mod and Source SDK 2013
 
 ### [Portal 2: Desolation](https://emberspark.games/desolation/)
 
-### [Prelude Online](https://prelude.online/)
+### [Prelude: Online](https://prelude.online/)
 
 # Have fun! 🐸⚡
