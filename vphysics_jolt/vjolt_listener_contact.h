@@ -418,7 +418,7 @@ private:
 			// Unused...
 			, m_ContactSpeed( vec3_origin )
 			, m_Velocity0( pObject1->GetBody()->GetLinearVelocity() )
-			, m_Velocity1( pObject1->GetBody()->GetLinearVelocity() )
+			, m_Velocity1( pObject2->GetBody()->GetLinearVelocity() )
 		{
 		}
 
