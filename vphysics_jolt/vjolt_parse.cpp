@@ -475,6 +475,36 @@ void		JoltPhysicsParseKV::NextBlock()
 
 //-------------------------------------------------------------------------------------------------
 
+static constexpr const char* DummyParserKeyValues = R"(
+"PhysProps_Fallback"
+{
+	"solid"
+	{
+		"dummy" "1"
+	}
+	"vehicle"
+	{
+		"dummy" "1"
+	}
+	"vehicle_sounds"
+	{
+		"dummy" "1"
+	}
+	"vehicle_view"
+	{
+		"dummy" "1"
+	}
+	"ragdollconstraint"
+	{
+		"dummy" "1"
+	}
+	"collisionrules"
+	{
+		"dummy" "1"
+	}
+}
+)";
+
 IVPhysicsKeyParser *CreateVPhysicsKeyParser( const char *pKeyData, bool bIsPacked )
 {
 	VJoltAssertMsg( !bIsPacked, "Packed VPhysics KV not supported. You should not get here anyway as we do not emit it." );
@@ -483,8 +513,17 @@ IVPhysicsKeyParser *CreateVPhysicsKeyParser( const char *pKeyData, bool bIsPacke
 
 	KeyValues *pszKV = HeaderlessKVBufferToKeyValues( pKeyData, "VPhysicsKeyParse" );
 
+	// Josh: Ideally we would return nullptr here, but that breaks a lot of things.
+	// If we fail to parse the KV, simply just fall-back to a dummy KV that will cause things
+	// to get zero-initialized.
+	// In the future, we may want to add a KV patching pass to fix up broken model and vehicle data.
 	if ( !pszKV )
-		return nullptr;
+	{
+		Log_Warning( LOG_VJolt, "CreateVPhysicsKeyParser: Encountered invalid KV data. Falling back to a dummy KV. You may notice a broken prop/vehicle.\n" );
+
+		pszKV = new KeyValues( "VPhysicsKeyParse_Fallback" );
+		pszKV->LoadFromBuffer( "VPhysicsKeyParse_Fallback", DummyParserKeyValues );
+	}
 
 	return new JoltPhysicsParseKV( pszKV );
 }
