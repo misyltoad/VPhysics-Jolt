@@ -83,6 +83,7 @@ private:
 
 	std::vector< JoltPhysicsWheel >			m_Wheels;
 
+	float									m_TotalWheelMass = 0.0f;
 	JoltPhysicsInternalVehicleState			m_InternalState;
 
 	JPH::Ref< JPH::VehicleConstraint >		m_VehicleConstraint;
