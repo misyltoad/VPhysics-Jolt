@@ -5,8 +5,8 @@
 
 struct JoltPhysicsContactPair
 {
-	JoltPhysicsContactPair( JoltPhysicsObject *object1, JoltPhysicsObject *object2 )
-		: pObject1(object1), pObject2(object2)
+	JoltPhysicsContactPair( JoltPhysicsObject *pObject1, JoltPhysicsObject *pObject2 )
+		: pObject1(pObject1), pObject2(pObject2)
 	{
 	}
 
