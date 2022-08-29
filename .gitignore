@@ -1,0 +1,54 @@
+# Multi-platform
+*.vpc_cache
+*.vpc_crc
+.vscode
+.cache
+
+# Windows Stuff
+*.vcxproj
+*.sln
+*.filters
+.vs
+enc_temp_folder/
+*.suo
+*.user
+*.FileListAbsolute.txt
+*.sln.docstates
+*.obj
+*.pch
+*.tlog
+*.log
+*.scc
+*.exp
+*.ilk
+*.lastbuildstate
+*.sdf
+*.opensdf
+*.idb
+*.vcxproj.filters
+*.pdb
+*.recipe
+*.iobj
+*.ipdb
+*.res
+*.aps
+UpgradeLog.htm
+generated_code_*
+*.dll
+*.exe
+*.lib
+
+# Linux Stuff
+*.mak
+*.o
+*.a
+*.P
+*.map
+*.so
+*.so.dbg
+manifest.txt
+obj*/
+
+# Mac Stuff
+*.xcodeproj/
+
