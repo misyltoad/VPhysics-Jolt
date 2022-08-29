@@ -41,7 +41,7 @@
 #include "tier1/tier1.h"
 #include "tier1/strtools.h"
 #include "tier1/interface.h"
-#include "tier1/keyvalues.h"
+#include "tier1/KeyValues.h"
 #include "tier1/UtlStringMap.h"
 #include "tier1/utlbuffer.h"
 

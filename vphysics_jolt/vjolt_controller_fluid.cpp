@@ -103,7 +103,14 @@ void JoltPhysicsFluidController::OnJoltPhysicsObjectDestroyed( JoltPhysicsObject
 	if ( pObject == m_pFluidObject )
 		m_pFluidObject = nullptr;
 
+#if __cplusplus >= 202002L
 	std::erase_if( m_ObjectsInShape, [pObject]( JoltPhysicsObject *pCachedObject ) { return pObject == pCachedObject; } );
+#else
+	for ( auto it( m_ObjectsInShape.begin() ); it != m_ObjectsInShape.end(); ++it ) {
+		if ( *it == pObject )
+			it = m_ObjectsInShape.erase(it);
+	}
+#endif
 }
 
 //-------------------------------------------------------------------------------------------------

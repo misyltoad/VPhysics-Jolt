@@ -5,6 +5,13 @@
 
 struct JoltPhysicsContactPair
 {
+#if __cplusplus < 202002L
+	JoltPhysicsContactPair( JoltPhysicsObject *object1, JoltPhysicsObject *object2 )
+		: pObject1(object1), pObject2(object2)
+	{
+	}
+#endif
+
 	JoltPhysicsObject *pObject1 = nullptr;
 	JoltPhysicsObject *pObject2 = nullptr;
 };
