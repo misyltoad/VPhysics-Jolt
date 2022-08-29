@@ -54,12 +54,8 @@ void JoltPhysicsObjectPairHash::RemoveObjectPair( void *pObject0, void *pObject1
 bool JoltPhysicsObjectPairHash::IsObjectPairInHash( void *pObject0, void *pObject1 )
 {
     auto pair = CreateSortedPair( pObject0, pObject1 );
-	auto &pairHashes = m_PairHashes[ GetHashArrayIndex( PointerHasher{}( pair ) ) ];
-#if __cplusplus >= 202002L
-    return pairHashes.contains( pair );
-#else
+    auto &pairHashes = m_PairHashes[ GetHashArrayIndex( PointerHasher{}( pair ) ) ];
     return pairHashes.find( pair ) != pairHashes.end();
-#endif
 }
 
 void JoltPhysicsObjectPairHash::RemoveAllPairsForObject( void *pObject0 )
@@ -76,11 +72,7 @@ void JoltPhysicsObjectPairHash::RemoveAllPairsForObject( void *pObject0 )
 
 bool JoltPhysicsObjectPairHash::IsObjectInHash( void *pObject0 )
 {
-#if __cplusplus >= 202002L
-    return m_Objects.contains( pObject0 );
-#else
     return m_Objects.find( pObject0 ) != m_Objects.end();
-#endif
 }
 
 //-------------------------------------------------------------------------------------------------
