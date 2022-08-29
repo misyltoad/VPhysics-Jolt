@@ -5,6 +5,11 @@
 
 struct JoltPhysicsContactPair
 {
+	JoltPhysicsContactPair( JoltPhysicsObject *pObject1, JoltPhysicsObject *pObject2 )
+		: pObject1(pObject1), pObject2(pObject2)
+	{
+	}
+
 	JoltPhysicsObject *pObject1 = nullptr;
 	JoltPhysicsObject *pObject2 = nullptr;
 };
