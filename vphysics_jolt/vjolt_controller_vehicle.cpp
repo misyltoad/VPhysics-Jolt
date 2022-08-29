@@ -403,6 +403,9 @@ void JoltPhysicsVehicleController::CreateWheel( JPH::VehicleConstraintSettings &
 	const float steeringAngle = DEG2RAD( Max( m_VehicleParams.steering.degreesSlow, m_VehicleParams.steering.degreesFast ) );
 	const float additionalLength = SourceToJolt::Distance( axle.wheels.springAdditionalLength );
 
+	Vector gravity;
+	m_pEnvironment->GetGravity( &gravity );
+
 	JPH::WheelSettingsWV *wheelSettings = new JPH::WheelSettingsWV;
 	wheelSettings->mPosition			= SourceToJolt::Distance( wheelPositionLocal );
 	wheelSettings->mDirection			= JPH::Vec3( 0, 0, -1 );
@@ -431,6 +434,14 @@ void JoltPhysicsVehicleController::CreateWheel( JPH::VehicleConstraintSettings &
 		wheelSettings->mLongitudinalFriction.AddPoint( 1.0f, axle.wheels.frictionScale );
 	}
 
+	// TODO: We may want to update this every pre-simulation to account for changing gravity.
+	wheelSettings->mMaxBrakeTorque =
+		0.5f *
+		SourceToJolt::Distance( gravity.Length() ) *
+		( m_pCarBodyObject->GetMass() + m_TotalWheelMass ) *
+		axle.brakeFactor *
+		SourceToJolt::Distance( axle.wheels.radius );
+
 	vehicleSettings.mWheels.push_back( wheelSettings );
 	m_InternalState.LargestWheelRadius = Max( m_InternalState.LargestWheelRadius, SourceToJolt::Distance( wheelWidth ) );
 }
@@ -441,6 +452,10 @@ void JoltPhysicsVehicleController::CreateWheels( JPH::VehicleConstraintSettings 
 
 	m_Wheels.reserve( m_VehicleParams.axleCount * m_VehicleParams.wheelsPerAxle );
 	vehicleSettings.mAntiRollBars.reserve( m_VehicleParams.axleCount );
+
+	m_TotalWheelMass = 0.0f;
+	for ( int axle = 0; axle < m_VehicleParams.axleCount; axle++ )
+		m_TotalWheelMass += m_VehicleParams.axles[ axle ].wheels.mass * m_VehicleParams.wheelsPerAxle;
 
 	for ( int axle = 0; axle < m_VehicleParams.axleCount; axle++ )
 	{
