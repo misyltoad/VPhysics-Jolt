@@ -19,6 +19,15 @@
 #define override_not_portal2 override
 #endif
 
+#if defined( GAME_CSGO ) || defined( GAME_DESOLATION ) || defined( GAME_PORTAL2 ) || defined( GAME_L4D2 )
+#define GAME_L4D2_OR_NEWER
+#define override_l4d2 override
+#define override_not_l4d2
+#else
+#define override_l4d2
+#define override_not_l4d2 override
+#endif
+
 #if defined( GAME_CSGO ) || defined( GAME_DESOLATION ) || defined( GAME_PORTAL2 ) || defined( GAME_L4D2 ) || defined( GAME_ASW )
 #define GAME_ASW_OR_NEWER
 #define override_asw override
