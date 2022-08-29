@@ -58,7 +58,7 @@ bool JoltPhysicsObjectPairHash::IsObjectPairInHash( void *pObject0, void *pObjec
 #if __cplusplus >= 202002L
     return pairHashes.contains( pair );
 #else
-	return pairHashes.find( pair ) != pairHashes.cend();
+    return pairHashes.find( pair ) != pairHashes.end();
 #endif
 }
 
@@ -79,7 +79,7 @@ bool JoltPhysicsObjectPairHash::IsObjectInHash( void *pObject0 )
 #if __cplusplus >= 202002L
     return m_Objects.contains( pObject0 );
 #else
-	return m_Objects.find( pObject0 ) != m_Objects.cend();
+    return m_Objects.find( pObject0 ) != m_Objects.end();
 #endif
 }
 
