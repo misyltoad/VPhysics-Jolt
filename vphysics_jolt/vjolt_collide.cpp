@@ -368,7 +368,6 @@ namespace ivp_compat
 {
 	struct collideheader_t
 	{
-		int		size;
 		int		vphysicsID;
 		short	version;
 		short	modelType;
@@ -491,11 +490,12 @@ namespace ivp_compat
 		}
 	};
 
-	static constexpr int IVP_COMPACT_SURFACE_ID			= MAKEID('I','V','P','S');
-	static constexpr int IVP_COMPACT_SURFACE_ID_SWAPPED	= MAKEID('S','P','V','I');
-	static constexpr int IVP_COMPACT_MOPP_ID			= MAKEID('M','O','P','P');
-	static constexpr int VPHYSICS_COLLISION_ID			= MAKEID('V','P','H','Y');
-	static constexpr short VPHYSICS_COLLISION_VERSION	= 0x0100;
+	static constexpr int	IVP_COMPACT_SURFACE_SUPER_LEGACY	= 0; // Really old .phy files, don't have anything here, and were just serialized compact headers directly.
+	static constexpr int	IVP_COMPACT_SURFACE_ID				= MAKEID('I','V','P','S');
+	static constexpr int	IVP_COMPACT_SURFACE_ID_SWAPPED		= MAKEID('S','P','V','I');
+	static constexpr int	IVP_COMPACT_MOPP_ID					= MAKEID('M','O','P','P');
+	static constexpr int	VPHYSICS_COLLISION_ID				= MAKEID('V','P','H','Y');
+	static constexpr short	VPHYSICS_COLLISION_VERSION			= 0x0100;
 
 	enum
 	{
@@ -556,14 +556,8 @@ namespace ivp_compat
 			vecOut.AddToTail( pNode->GetCompactLedge() );
 	}
 
-	CPhysCollide *DeserializeIVP_Poly( const collideheader_t *pCollideHeader )
+	CPhysCollide *DeserializeIVP_Poly( const compactsurface_t* pSurface )
 	{
-		const compactsurfaceheader_t *pSurfaceHeader = reinterpret_cast< const compactsurfaceheader_t* >( pCollideHeader + 1 );
-		const compactsurface_t *pSurface = reinterpret_cast< const compactsurface_t* >( pSurfaceHeader + 1 );
-
-		if ( pSurface->dummy[2] != IVP_COMPACT_SURFACE_ID )
-			return nullptr;
-
 		const compactledgenode_t *pFirstLedgeNode = reinterpret_cast< const compactledgenode_t * >(
 				reinterpret_cast< const char * >( pSurface ) + pSurface->offset_ledgetree_root );
 
@@ -594,6 +588,14 @@ namespace ivp_compat
 			return CPhysConvex::FromConvexShape( pShape )->ToPhysCollide();
 		}
 	}
+
+	CPhysCollide *DeserializeIVP_Poly( const collideheader_t *pCollideHeader )
+	{
+		const compactsurfaceheader_t *pSurfaceHeader = reinterpret_cast< const compactsurfaceheader_t* >( pCollideHeader + 1 );
+		const compactsurface_t *pSurface = reinterpret_cast< const compactsurface_t* >( pSurfaceHeader + 1 );
+
+		return DeserializeIVP_Poly( pSurface );
+	}
 }
 
 void JoltPhysicsCollision::VCollideLoad( vcollide_t *pOutput, int solidCount, const char *pBuffer, int size, bool swap /*= false*/ )
@@ -614,41 +616,69 @@ void JoltPhysicsCollision::VCollideLoad( vcollide_t *pOutput, int solidCount, co
 		// this mess! :p
 		pOutput->solids[ i ] = nullptr;
 
+		const int solidSize = *reinterpret_cast<const int *>( pCursor );
+		pCursor += sizeof( int );
+
 		const ivp_compat::collideheader_t *pCollideHeader = reinterpret_cast<const ivp_compat::collideheader_t *>( pCursor );
 
-		if ( pCollideHeader->vphysicsID != ivp_compat::VPHYSICS_COLLISION_ID ||
-			 pCollideHeader->version != ivp_compat::VPHYSICS_COLLISION_VERSION )
+		if ( pCollideHeader->vphysicsID == ivp_compat::VPHYSICS_COLLISION_ID )
 		{
-			Log_Warning( LOG_VJolt, "Skipped solid %d due to invalid header (id: %.4s, version: 0x%x)\n", i, &pCollideHeader->vphysicsID, pCollideHeader->version );
-			continue;
-		}
+			// This is the main path that everything falls down for a modern
+			// .phy file with the collide header.
 
-		switch ( pCollideHeader->modelType )
-		{
-			case ivp_compat::COLLIDE_POLY:
-				pOutput->solids[ i ] = DeserializeIVP_Poly( pCollideHeader );
-				break;
+			if ( pCollideHeader->version != ivp_compat::VPHYSICS_COLLISION_VERSION )
+				Log_Warning( LOG_VJolt, "Solid with unknown version: 0x%x, may crash!\n", pCollideHeader->version );
 
-			case ivp_compat::COLLIDE_MOPP:
-				Log_Warning( LOG_VJolt, "Unsupported solid type COLLIDE_MOPP on solid %d. Skipping...\n", i );
-				break;
+			switch ( pCollideHeader->modelType )
+			{
+				case ivp_compat::COLLIDE_POLY:
+					pOutput->solids[ i ] = DeserializeIVP_Poly( pCollideHeader );
+					break;
+
+				case ivp_compat::COLLIDE_MOPP:
+					Log_Warning( LOG_VJolt, "Unsupported solid type COLLIDE_MOPP on solid %d. Skipping...\n", i );
+					break;
 	
-			case ivp_compat::COLLIDE_BALL:
-				Log_Warning( LOG_VJolt, "Unsupported solid type COLLIDE_BALL on solid %d. Skipping...\n", i );
-				break;
+				case ivp_compat::COLLIDE_BALL:
+					Log_Warning( LOG_VJolt, "Unsupported solid type COLLIDE_BALL on solid %d. Skipping...\n", i );
+					break;
 
-			case ivp_compat::COLLIDE_VIRTUAL:
-				Log_Warning( LOG_VJolt, "Unsupported solid type COLLIDE_VIRTUAL on solid %d. Skipping...\n", i );
-				break;
+				case ivp_compat::COLLIDE_VIRTUAL:
+					Log_Warning( LOG_VJolt, "Unsupported solid type COLLIDE_VIRTUAL on solid %d. Skipping...\n", i );
+					break;
 
-			default:
-				Log_Warning( LOG_VJolt, "Unsupported solid type 0x%x on solid %d. Skipping...\n", (int)pCollideHeader->modelType, i );
-				break;
+				default:
+					Log_Warning( LOG_VJolt, "Unsupported solid type 0x%x on solid %d. Skipping...\n", (int)pCollideHeader->modelType, i );
+					break;
+			}
+		}
+		else
+		{
+			// This must be a legacy style .phy where it is just a dumped compact surface.
+			// Some props in shipping HL2 still use this format, as they have a .phy, even after their
+			// .qc had the $collisionmodel removed, as they didn't get the stale .phy in the game files deleted.
+
+			const ivp_compat::compactsurface_t *pCompactSurface = reinterpret_cast<const ivp_compat::compactsurface_t *>( pCursor );
+			const int legacyModelType = pCompactSurface->dummy[2];
+			switch ( legacyModelType )
+			{
+				case ivp_compat::IVP_COMPACT_SURFACE_SUPER_LEGACY:
+				case ivp_compat::IVP_COMPACT_SURFACE_ID:
+				case ivp_compat::IVP_COMPACT_SURFACE_ID_SWAPPED:
+					pOutput->solids[i] = DeserializeIVP_Poly( pCompactSurface );
+					break;
+
+				case ivp_compat::IVP_COMPACT_MOPP_ID:
+					Log_Warning( LOG_VJolt, "Unsupported legacy solid type IVP_COMPACT_MOPP_ID on solid %d. Skipping...\n", i );
+					break;
+
+				default:
+					Log_Warning( LOG_VJolt, "Unsupported legacy solid type 0x%x on solid %d. Skipping...\n", legacyModelType, i);
+					break;
+			}
 		}
 
-		// Size does not include the size of "size", ironically!
-		// add sizeof( int ) for that.
-		pCursor += pCollideHeader->size + sizeof( int );
+		pCursor += solidSize;
 	}
 
 	// The rest of the buffer is KV.
