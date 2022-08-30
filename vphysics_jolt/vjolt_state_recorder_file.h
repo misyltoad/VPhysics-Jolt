@@ -11,7 +11,7 @@ public:
 
 	JoltStateRecorderFile( JoltStateRecorderFile &&other )
 		: StateRecorder( other )
-		, m_Stream( move( other.m_Stream ) )
+		, m_Stream( std::move( other.m_Stream ) )
 	{
 	}
 
