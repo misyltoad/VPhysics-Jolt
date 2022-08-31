@@ -493,6 +493,22 @@ private:
 			m_Event.pInternalData		= &m_Data;
 		}
 
+		JoltPhysicsCollisionEvent( const JoltPhysicsCollisionEvent &other )
+			: m_Event( other.m_Event )
+			, m_Data ( other.m_Data )
+		{
+			// Re-target the event's internal data pointer to our own structure.
+			m_Event.pInternalData = &m_Data;
+		}
+
+		JoltPhysicsCollisionEvent( JoltPhysicsCollisionEvent &&other )
+			: m_Event( std::move( other.m_Event ) )
+			, m_Data ( std::move( other.m_Data ) )
+		{
+			// Re-target the event's internal data pointer to our own structure.
+			m_Event.pInternalData = &m_Data;
+		}
+
 		static bool IsCollision( JoltPhysicsObject *pObject1, JoltPhysicsObject *pObject2 )
 		{
 			bool bIsCollision = ( pObject1->GetCallbackFlags() & pObject2->GetCallbackFlags() ) & CALLBACK_GLOBAL_COLLISION;
