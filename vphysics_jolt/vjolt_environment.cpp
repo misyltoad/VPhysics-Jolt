@@ -909,7 +909,7 @@ const IPhysicsObject **JoltPhysicsEnvironment::GetObjectList( int *pOutputObject
 	if ( pOutputObjectCount )
 		*pOutputObjectCount = nCount;
 
-	m_CachedObjects.reserve( nCount );
+	m_CachedObjects.resize( nCount );
 	for ( int i = 0; i < nCount; i++ )
 	{
 		JPH::Body *pBody = m_PhysicsSystem.GetBodyLockInterfaceNoLock().TryGetBody( m_CachedBodies[ i ] );
