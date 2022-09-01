@@ -758,6 +758,10 @@ int JoltPhysicsCollision::CreateDebugMesh( CPhysCollide const *pCollisionModel, 
 		}
 	}
 
+	// Swap the winding of the triangles to match original VPhysics behaviour.
+	for ( int i = 0; i < nAccumTris; i++ )
+		Swap( pVerts[ ( i * 3 ) + 0 ], pVerts[ ( i * 3 ) + 2 ] );
+
 	*outVerts = pVerts;
 	return nAccumTris * 3;
 }
