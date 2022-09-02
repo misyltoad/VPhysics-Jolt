@@ -375,3 +375,9 @@ constexpr void EraseIf( T &c, Pred pred )
 	auto it = std::remove_if( c.begin(), c.end(), pred );
 	c.erase( it, c.end() );
 }
+
+template< typename T, typename Value >
+constexpr bool Contains( const T &c, const Value &value )
+{
+	return c.find( value ) != c.end();
+}
