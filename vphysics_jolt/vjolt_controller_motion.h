@@ -29,5 +29,5 @@ public:
 private:
 	IMotionEvent *m_pMotionEvent;
 
-	CUtlVector< JoltPhysicsObject * > m_pObjects;
+	std::vector< JoltPhysicsObject * > m_pObjects;
 };

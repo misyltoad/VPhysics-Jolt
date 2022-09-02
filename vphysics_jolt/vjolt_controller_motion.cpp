@@ -32,11 +32,11 @@ void JoltPhysicsMotionController::AttachObject( IPhysicsObject *pObject, bool bC
 		return;
 
 	JoltPhysicsObject *pPhysicsObject = static_cast< JoltPhysicsObject * >( pObject );
-	if ( bCheckIfAlreadyAttached && m_pObjects.HasElement( pPhysicsObject ) )
+	if ( bCheckIfAlreadyAttached && VectorContains( m_pObjects, pPhysicsObject ) )
 		return;
 
 	pPhysicsObject->AddDestroyedListener( this );
-	m_pObjects.AddToTail( pPhysicsObject );
+	m_pObjects.push_back( pPhysicsObject );
 }
 
 void JoltPhysicsMotionController::DetachObject( IPhysicsObject *pObject )
@@ -45,7 +45,7 @@ void JoltPhysicsMotionController::DetachObject( IPhysicsObject *pObject )
 		return;
 
 	JoltPhysicsObject *pPhysicsObject = static_cast< JoltPhysicsObject * >( pObject );
-	m_pObjects.FindAndRemove( pPhysicsObject );
+	Erase( m_pObjects, pPhysicsObject );
 	pPhysicsObject->RemoveDestroyedListener( this );
 }
 
@@ -53,18 +53,18 @@ void JoltPhysicsMotionController::DetachObject( IPhysicsObject *pObject )
 
 int JoltPhysicsMotionController::CountObjects( void )
 {
-	return m_pObjects.Count();
+	return int( m_pObjects.size() );
 }
 
 void JoltPhysicsMotionController::GetObjects( IPhysicsObject **pObjectList )
 {
-	for ( int i = 0; i < m_pObjects.Count(); i++ )
+	for ( size_t i = 0; i < m_pObjects.size(); i++ )
 		pObjectList[ i ] = m_pObjects[ i ];
 }
 
 void JoltPhysicsMotionController::ClearObjects( void )
 {
-	m_pObjects.RemoveAll();
+	m_pObjects.clear();
 }
 
 void JoltPhysicsMotionController::WakeObjects( void )
@@ -85,7 +85,7 @@ void JoltPhysicsMotionController::SetPriority( priority_t priority )
 void JoltPhysicsMotionController::OnJoltPhysicsObjectDestroyed( JoltPhysicsObject *pObject )
 {
 	JoltPhysicsObject *pPhysicsObject = static_cast< JoltPhysicsObject * >( pObject );
-	m_pObjects.FindAndRemove( pPhysicsObject );
+	Erase( m_pObjects, pPhysicsObject );
 }
 
 void JoltPhysicsMotionController::OnPreSimulate( float flDeltaTime )
