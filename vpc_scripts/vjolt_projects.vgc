@@ -13,3 +13,8 @@ $Project "vphysics_jolt"
 {
 	"vphysics_jolt/vphysics_jolt/vphysics_jolt.vpc"
 }
+
+$Project "vphysics_jolt_static"
+{
+	"vphysics_jolt/vphysics_jolt/vphysics_jolt_static.vpc"
+}
