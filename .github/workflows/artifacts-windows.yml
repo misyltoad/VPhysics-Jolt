@@ -3,7 +3,7 @@ name: Build Artifacts for Windows
 on: [push, pull_request, workflow_dispatch]
 
 jobs:
-  build-set-windows:
+  windows:
     strategy:
       matrix:
         source_branch: [sdk2013-sp, sdk2013-mp, asw]
