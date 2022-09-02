@@ -362,3 +362,16 @@ inline uint32 tzcnt( uint32 n )
 #endif
 }
 
+template< typename T, typename Value >
+constexpr void Erase( T &c, const Value &value )
+{
+	auto it = std::remove( c.begin(), c.end(), value );
+	c.erase( it, c.end() );
+}
+
+template< typename T, typename Pred >
+constexpr void EraseIf( T &c, Pred pred )
+{
+	auto it = std::remove_if( c.begin(), c.end(), pred );
+	c.erase( it, c.end() );
+}
