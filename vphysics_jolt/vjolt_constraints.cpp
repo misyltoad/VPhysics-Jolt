@@ -70,8 +70,7 @@ void JoltPhysicsConstraintGroup::AddConstraint( JoltPhysicsConstraint *pConstrai
 
 void JoltPhysicsConstraintGroup::RemoveConstraint( JoltPhysicsConstraint *pConstraint )
 {
-	m_pConstraints.erase(
-		std::remove_if( m_pConstraints.begin(), m_pConstraints.end(), [&]( JoltPhysicsConstraint *pOther ) { return pOther == pConstraint; } ) );
+	Erase( m_pConstraints, pConstraint );
 }
 
 //-------------------------------------------------------------------------------------------------
