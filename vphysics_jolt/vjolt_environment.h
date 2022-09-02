@@ -164,6 +164,9 @@ public:
 
 	void NotifyConstraintDisabled( JoltPhysicsConstraint* pConstraint );
 
+	void AddDirtyStaticBody( const JPH::BodyID &id );
+	void RemoveDirtyStaticBody( const JPH::BodyID &id );
+
 private:
 
 	void RemoveBodyAndDeleteObject( JoltPhysicsObject* pObject );
@@ -195,6 +198,14 @@ private:
 	mutable JPH::BodyIDVector m_CachedActiveBodies;
 
 	JPH::PhysicsSystem m_PhysicsSystem;
+
+	// A vector of objects that were awake, and changed their
+	// motion type from Dynamic -> Static, so that they can be
+	// retrieved in GetActiveObjects, and have their visuals updated.
+	// If we don't do this, objects that get moved, woken, and their
+	// movement type changed to static will not get their transforms
+	// updated on the game side.
+	mutable JPH::BodyIDVector m_DirtyStaticBodies;
 
 	std::vector< JoltPhysicsObject * > m_pDeadObjects;
 	std::vector< JoltPhysicsConstraint * > m_pDeadConstraints;

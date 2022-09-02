@@ -229,6 +229,11 @@ void JoltPhysicsObject::Wake()
 		JPH::BodyInterface& bodyInterface = m_pPhysicsSystem->GetBodyInterfaceNoLock();
 		bodyInterface.ActivateBody( m_pBody->GetID() );
 	}
+	else
+	{
+		// See other comments in UpdateLayer.
+		m_pEnvironment->AddDirtyStaticBody( m_pBody->GetID() );
+	}
 }
 
 void JoltPhysicsObject::Sleep()
@@ -1222,6 +1227,17 @@ void JoltPhysicsObject::UpdateLayer()
 	if ( !bStatic && !IsControlledByGame() )
 	{
 		bool bStaticMotionType = bStaticSolid || bPinned;
+
+		// If we are transfering to being static, and we were active
+		// add us to a list of bodies on the environment so we can be included in
+		// GetActiveObjects for the next step.
+		// This way the game can correctly update the transforms on the game side
+		// when move -> wake -> become pinned happens.
+		if ( bStaticMotionType && m_pBody->IsActive() )
+			m_pEnvironment->AddDirtyStaticBody( m_pBody->GetID() );
+		else if ( !bStaticMotionType )
+			m_pEnvironment->RemoveDirtyStaticBody( m_pBody->GetID() );
+
 		bodyInterface.SetMotionType( m_pBody->GetID(), bStaticMotionType ? JPH::EMotionType::Static : JPH::EMotionType::Dynamic, JPH::EActivation::Activate );
 	}
 
