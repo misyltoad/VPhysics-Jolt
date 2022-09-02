@@ -1,0 +1,12 @@
+//-----------------------------------------------------------------------------
+//	JOLTPHYSICS_SSE42.VPC
+//
+//	Project Script
+//-----------------------------------------------------------------------------
+
+$Macro PROJNAME				"joltphysics_sse42"
+
+$Conditional VOLT_SSE42		"1"
+$Macro VOLTARCH				"SSE42"
+
+$Include "joltphysics_inc.vpc"

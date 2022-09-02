@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-//	VPHYSICS_JOLT_INC.INC
+//	VPHYSICS_JOLT_INC.VPC
 //
 //	Project Script
 //-----------------------------------------------------------------------------
@@ -27,6 +27,24 @@ $Configuration
 		// which means we need to be compatible with the .libs provided built for
 		// ancient Visual Studio.
 		$AdditionalDependencies			"$BASE legacy_stdio_definitions.lib" [$GAME_ASW]
+	}
+}
+
+$Configuration	"Debug"
+{
+	$General
+	{
+		$OutputDirectory			".\Debug_$VOLTARCH$PLATSUBDIR"		[$WINDOWS]
+		$IntermediateDirectory		".\Debug_$VOLTARCH$PLATSUBDIR"		[$WINDOWS]
+	}
+}
+
+$Configuration	"Release"
+{
+	$General
+	{
+		$OutputDirectory			".\Release_$VOLTARCH$PLATSUBDIR"	[$WINDOWS]
+		$IntermediateDirectory		".\Release_$VOLTARCH$PLATSUBDIR"	[$WINDOWS]
 	}
 }
 
@@ -142,7 +160,9 @@ $Project "$PROJNAME"
 
 	$Folder	"Link Libraries"
 	{
-		$Lib	"joltphysics"
+		$Lib	"joltphysics_avx2"		[$VOLT_AVX2]
+		$Lib	"joltphysics_sse42"		[$VOLT_SSE42]
+		$Lib	"joltphysics_sse2"		[$VOLT_SSE2]
 		$Lib	"mathlib"
 		$Lib	"tier2"
 	}
