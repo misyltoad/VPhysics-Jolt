@@ -103,14 +103,7 @@ void JoltPhysicsFluidController::OnJoltPhysicsObjectDestroyed( JoltPhysicsObject
 	if ( pObject == m_pFluidObject )
 		m_pFluidObject = nullptr;
 
-	for ( auto it = m_ObjectsInShape.begin(); it != m_ObjectsInShape.end(); it++ )
-	{
-		if ( *it == pObject )
-		{
-			m_ObjectsInShape.erase( it );
-			break;
-		}
-	}
+	Erase( m_ObjectsInShape, pObject );
 }
 
 //-------------------------------------------------------------------------------------------------
