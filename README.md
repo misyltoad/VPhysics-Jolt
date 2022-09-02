@@ -61,6 +61,9 @@ Unfortunately we cannot redistribute the additional code/headers needed to build
 
 ## Download
 
+Development builds for each commit for SDK2013 SP/MP + ASW are available as artifacts on each commit on GitHub through GitHub Actions.</br>
+Development builds for each commit for Garry's Mod are available on [froggi.es](https://git.froggi.es/joshua/vphysics_jolt_gmod_builds).
+
 For each release, binary builds are provided for Garry's Mod and Source SDK 2013 on the [Releases](https://github.com/Joshua-Ashton/VPhysics-Jolt/releases/) page.
 
 ## Media
