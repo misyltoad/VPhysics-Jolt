@@ -1,0 +1,15 @@
+//-----------------------------------------------------------------------------
+//	VJOLT_GROUPS.VGC
+//
+//	Group configurations for VPhysics Jolt
+//-----------------------------------------------------------------------------
+
+$Group "jolt"
+{
+	"appframework"
+	"interfaces"
+	"tier1"
+	"mathlib"
+	"joltphysics"
+	"vphysics_jolt"
+}

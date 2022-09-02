@@ -1,0 +1,15 @@
+//-----------------------------------------------------------------------------
+//	VJOLT_PROJECTS.VGC
+//
+//	Project configurations for VPhysics Jolt
+//-----------------------------------------------------------------------------
+
+$Project "joltphysics"
+{
+	"vphysics_jolt/joltphysics/joltphysics.vpc"
+}
+
+$Project "vphysics_jolt"
+{
+	"vphysics_jolt/vphysics_jolt/vphysics_jolt.vpc"
+}
