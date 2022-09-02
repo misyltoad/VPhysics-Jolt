@@ -4,6 +4,9 @@
 //	Project Script
 //-----------------------------------------------------------------------------
 
-$Macro PROJNAME		"vphysics_jolt"
+$Macro PROJNAME				"vphysics_jolt_sse42"
+
+$Conditional VOLT_SSE42		"1"
+$Macro VOLTARCH				"SSE42"
 
 $Include "vphysics_jolt_inc.vpc"

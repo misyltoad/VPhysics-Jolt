@@ -1,0 +1,53 @@
+//-----------------------------------------------------------------------------
+//	VPHYSICS_WRAPPER.VPC
+//
+//	Project Script
+//-----------------------------------------------------------------------------
+
+$MacroRequired		"WRAPPER_NAME"
+
+$Macro SRCDIR		"..\.."
+$Macro OUTBINNAME	"$WRAPPER_NAME"
+$Macro OUTBINDIR	"$SRCDIR\..\$GAMEDIR\bin"
+
+$Include "$SRCDIR\vpc_scripts\source_dll_base.vpc"
+
+$Configuration
+{
+	$Linker
+	{
+		// For Alien Swarm, we don't get the ability to build our own tier1 or mathlib
+		// which means we need to be compatible with the .libs provided built for
+		// ancient Visual Studio.
+		$AdditionalDependencies			"$BASE legacy_stdio_definitions.lib" [$GAME_ASW]
+	}
+}
+
+$Project "vphysics_wrapper"
+{
+	$Folder	"Source Files"
+	{
+		$File	"vphysics_wrapper.cpp"
+	}
+
+	$Folder	"Header Files"
+	{				
+	}
+	
+	$Folder "Interface"
+	{
+		$File	"$SRCDIR\public\vphysics_interface.h"
+		$File	"$SRCDIR\public\vphysics\collision_set.h"
+		$File	"$SRCDIR\public\vphysics\constraints.h"
+		$File	"$SRCDIR\public\vphysics\friction.h"
+		$File	"$SRCDIR\public\vphysics\object_hash.h"
+		$File	"$SRCDIR\public\vphysics\performance.h"
+		$File	"$SRCDIR\public\vphysics\player_controller.h"
+		$File	"$SRCDIR\public\vphysics\stats.h"
+		$File	"$SRCDIR\public\vphysics\vehicles.h"
+	}
+
+	$Folder	"Link Libraries"
+	{
+	}
+}
