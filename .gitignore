@@ -10,6 +10,7 @@
 *.filters
 .vs
 enc_temp_folder/
+*.enc
 *.suo
 *.user
 *.FileListAbsolute.txt
