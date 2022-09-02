@@ -20,6 +20,14 @@ $Configuration
 		$Create/UsePrecompiledHeader	"Use Precompiled Header (/Yu)"
 		$Create/UsePCHThroughFile		"cbase.h"
 	}
+
+	$Linker
+	{
+		// For Alien Swarm, we don't get the ability to build our own tier1 or mathlib
+		// which means we need to be compatible with the .libs provided built for
+		// ancient Visual Studio.
+		$AdditionalDependencies			"$BASE legacy_stdio_definitions.lib" [$GAME_ASW]
+	}
 }
 
 $Project "$PROJNAME"
