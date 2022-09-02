@@ -9,6 +9,20 @@
 // Tier0
 #include "tier0/basetypes.h"
 #include "tier0/dbg.h"
+
+// Workaround mem.h #defining offsetof
+// on public SDKs when on Linux.
+// We don't want this behaviour.
+#ifdef LINUX
+#define WAS_LINUX
+#undef LINUX
+#endif
+#include "tier0/mem.h"
+#ifdef WAS_LINUX
+#define LINUX
+#undef WAS_LINUX
+#endif
+
 #ifndef GAME_SDK2013
 #include "tier0/logging.h"
 #endif
