@@ -1,4 +1,4 @@
-name: Build Artifacts for Windows
+name: Build Artifacts
 
 on: [push, pull_request, workflow_dispatch]
 
@@ -52,5 +52,51 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: vphysics_jolt_${{ matrix.source_branch }}_win32
+        path: ${{ matrix.source_branch }}/game
+        if-no-files-found: error
+
+  linux:
+    strategy:
+      matrix:
+        source_branch: [sdk2013-sp, sdk2013-mp]
+
+    runs-on: ubuntu-latest
+    container: debian:bullseye
+
+    steps:
+    - name: Install Dependencies
+      id: install-deps
+      shell: bash
+      run: |
+        dpkg --add-architecture i386
+        apt update
+        apt install -y build-essential git libstdc++6:i386 gcc-multilib g++-multilib
+
+    - name: Checkout Mini Source SDK
+      id: checkout-minisdk
+      uses: actions/checkout@v3
+      with:
+        repository: 'Joshua-Ashton/mini-source-sdk'
+
+    - name: Checkout VPhysics Jolt
+      id: checkout-code
+      uses: actions/checkout@v3
+      with:
+        path: '${{ matrix.source_branch }}/src/vphysics_jolt'
+        submodules: recursive
+
+    - name: Build GCC x86
+      id: build
+      shell: bash
+      working-directory: '${{ matrix.source_branch }}/src'
+      run: |
+        ./createjoltprojects.sh
+        make -f jolt.mak -j $(nproc)
+
+    - name: Upload artifacts
+      id: upload-artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: vphysics_jolt_${{ matrix.source_branch }}_linux32
         path: ${{ matrix.source_branch }}/game
         if-no-files-found: error
