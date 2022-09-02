@@ -4,20 +4,24 @@ on: [push, pull_request, workflow_dispatch]
 
 jobs:
   build-set-windows:
+    strategy:
+      matrix:
+        source_branch: [sdk2013-sp, sdk2013-mp]
+
     runs-on: windows-2022
 
     steps:
-    - name: Checkout Mini Source SDK 2013
+    - name: Checkout Mini Source SDK
       id: checkout-minisdk
       uses: actions/checkout@v3
       with:
-        repository: 'Joshua-Ashton/mini-source-sdk-2013'
+        repository: 'Joshua-Ashton/mini-source-sdk'
 
     - name: Checkout VPhysics Jolt
       id: checkout-code
       uses: actions/checkout@v3
       with:
-        path: 'mp/src/vphysics_jolt'
+        path: '${{ matrix.source_branch }}/src/vphysics_jolt'
         submodules: recursive
 
     - name: Find Visual Studio
@@ -33,7 +37,7 @@ jobs:
     - name: Build MSVC x86
       id: build
       shell: pwsh
-      working-directory: 'mp/src'
+      working-directory: '${{ matrix.source_branch }}/src'
       run: |
         & "${Env:COMSPEC}" /s /c "`"${Env:VSDEVCMD}`" -arch=x86 -host_arch=x64 -no_logo && set" `
           | % { , ($_ -Split '=', 2) } `
@@ -47,6 +51,6 @@ jobs:
       id: upload-artifacts
       uses: actions/upload-artifact@v2
       with:
-        name: vphysics_jolt_sdk2013_win32
-        path: mp/game
+        name: vphysics_jolt_${{ matrix.source_branch }}_win32
+        path: ${{ matrix.source_branch }}/game
         if-no-files-found: error
