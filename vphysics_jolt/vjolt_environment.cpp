@@ -401,14 +401,14 @@ IPhysicsFluidController *JoltPhysicsEnvironment::CreateFluidController( IPhysics
 {
 	JoltPhysicsObject *pJoltObject = static_cast< JoltPhysicsObject * >( pFluidObject );
 	JoltPhysicsFluidController *pFluidController = new JoltPhysicsFluidController( &m_PhysicsSystem, pJoltObject, pParams );
-	m_pPhysicsControllers.AddToTail( pFluidController );
+	m_pPhysicsControllers.push_back( pFluidController );
 	return pFluidController;
 }
 
 void JoltPhysicsEnvironment::DestroyFluidController( IPhysicsFluidController *pFluidController )
 {
 	JoltPhysicsFluidController *pInternalFluidController = static_cast<JoltPhysicsFluidController *>( pFluidController );
-	m_pPhysicsControllers.FindAndRemove( pInternalFluidController );
+	Erase( m_pPhysicsControllers, pInternalFluidController );
 	delete pInternalFluidController;
 }
 
@@ -658,14 +658,14 @@ void JoltPhysicsEnvironment::DestroyConstraintGroup( IPhysicsConstraintGroup *pG
 IPhysicsShadowController *JoltPhysicsEnvironment::CreateShadowController( IPhysicsObject *pObject, bool allowTranslation, bool allowRotation )
 {
 	JoltPhysicsShadowController *pController = new JoltPhysicsShadowController( static_cast<JoltPhysicsObject *>( pObject ), allowTranslation, allowRotation );
-	m_pPhysicsControllers.AddToTail( pController );
+	m_pPhysicsControllers.push_back( pController );
 	return pController;
 }
 
 void JoltPhysicsEnvironment::DestroyShadowController( IPhysicsShadowController *pShadowController )
 {
 	JoltPhysicsShadowController *pController = static_cast< JoltPhysicsShadowController * >( pShadowController );
-	m_pPhysicsControllers.FindAndRemove( pController );
+	Erase( m_pPhysicsControllers, pController );
 	delete pController;
 }
 
@@ -674,14 +674,14 @@ void JoltPhysicsEnvironment::DestroyShadowController( IPhysicsShadowController *
 IPhysicsPlayerController *JoltPhysicsEnvironment::CreatePlayerController( IPhysicsObject *pObject )
 {
 	JoltPhysicsPlayerController *pController = new JoltPhysicsPlayerController( static_cast<JoltPhysicsObject *>( pObject ) );
-	m_pPhysicsControllers.AddToTail( pController );
+	m_pPhysicsControllers.push_back( pController );
 	return pController;
 }
 
 void JoltPhysicsEnvironment::DestroyPlayerController( IPhysicsPlayerController *pPlayerController )
 {
 	JoltPhysicsPlayerController *pController = static_cast< JoltPhysicsPlayerController * >( pPlayerController );
-	m_pPhysicsControllers.FindAndRemove( pController );
+	Erase( m_pPhysicsControllers, pController );
 	delete pController;
 }
 
@@ -690,14 +690,14 @@ void JoltPhysicsEnvironment::DestroyPlayerController( IPhysicsPlayerController *
 IPhysicsMotionController *JoltPhysicsEnvironment::CreateMotionController( IMotionEvent *pHandler )
 {
 	JoltPhysicsMotionController *pController = new JoltPhysicsMotionController( pHandler );
-	m_pPhysicsControllers.AddToTail( pController );
+	m_pPhysicsControllers.push_back( pController );
 	return pController;
 }
 
 void JoltPhysicsEnvironment::DestroyMotionController( IPhysicsMotionController *pController )
 {
 	JoltPhysicsMotionController *pJoltController = static_cast< JoltPhysicsMotionController * >( pController );
-	m_pPhysicsControllers.FindAndRemove( pJoltController );
+	Erase( m_pPhysicsControllers, pJoltController );
 	delete pJoltController;
 }
 
@@ -708,14 +708,14 @@ IPhysicsVehicleController *JoltPhysicsEnvironment::CreateVehicleController( IPhy
 	JoltPhysicsObject *pJoltCarBodyObject = static_cast< JoltPhysicsObject * >( pVehicleBodyObject );
 
 	JoltPhysicsVehicleController *pController = new JoltPhysicsVehicleController( this, &m_PhysicsSystem, pJoltCarBodyObject, params, nVehicleType, pGameTrace );
-	m_pPhysicsControllers.AddToTail( pController );
+	m_pPhysicsControllers.push_back( pController );
 	return pController;
 }
 
 void JoltPhysicsEnvironment::DestroyVehicleController( IPhysicsVehicleController *pVehicleController )
 {
 	JoltPhysicsVehicleController *pJoltController = static_cast<JoltPhysicsVehicleController *>( pVehicleController );
-	m_pPhysicsControllers.FindAndRemove( pJoltController );
+	Erase( m_pPhysicsControllers, pJoltController );
 	delete pJoltController;
 }
 

@@ -211,7 +211,7 @@ private:
 	std::vector< JoltPhysicsConstraint * > m_pDeadConstraints;
 	std::vector< CPhysCollide * > m_pDeadObjectCollides;
 
-	CUtlVector< IJoltPhysicsController * > m_pPhysicsControllers;
+	std::vector< IJoltPhysicsController * > m_pPhysicsControllers;
 
 	std::unordered_map< uintp, void * > m_SaveRestorePointerMap;
 
