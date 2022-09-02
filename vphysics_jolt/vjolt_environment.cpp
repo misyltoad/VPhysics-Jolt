@@ -878,16 +878,24 @@ void JoltPhysicsEnvironment::SetQuickDelete( bool bQuick )
 
 int JoltPhysicsEnvironment::GetActiveObjectCount() const
 {
-	// If this is the first call, then some objects may have become
-	// asleep from the initial simulation have their visuals not match where they are.
-	if ( m_bActiveObjectCountFirst )
-		m_PhysicsSystem.GetBodies( m_CachedActiveBodies );
-	else
+	if ( !m_bActiveObjectCountFirst )
+	{
 		m_PhysicsSystem.GetActiveBodies( m_CachedActiveBodies );
+		// Append any dirty static bodies we need the game side transforms
+		// to be updated for.
+		m_CachedActiveBodies.insert( m_CachedActiveBodies.end(), m_DirtyStaticBodies.begin(), m_DirtyStaticBodies.end() );
+	}
+	else
+	{
+		// If this is the first call, then some objects may have become
+		// asleep from the initial simulation have their visuals not match where they are.
+		m_PhysicsSystem.GetBodies( m_CachedActiveBodies );
+		m_bActiveObjectCountFirst = false;
+	}
 
-	m_bActiveObjectCountFirst = false;
-	const int nCount = int ( m_CachedActiveBodies.size() );
-	return nCount;
+	m_DirtyStaticBodies.clear();
+
+	return int( m_CachedActiveBodies.size() );
 }
 
 void JoltPhysicsEnvironment::GetActiveObjects( IPhysicsObject **pOutputObjectList ) const
@@ -1370,6 +1378,18 @@ void JoltPhysicsEnvironment::NotifyConstraintDisabled( JoltPhysicsConstraint* pC
 {
 	if ( m_pConstraintListener && m_EnableConstraintNotify )
 		m_pConstraintListener->ConstraintBroken( pConstraint );
+}
+
+//-------------------------------------------------------------------------------------------------
+
+void JoltPhysicsEnvironment::AddDirtyStaticBody( const JPH::BodyID &id )
+{
+	m_DirtyStaticBodies.push_back( id );
+}
+
+void JoltPhysicsEnvironment::RemoveDirtyStaticBody( const JPH::BodyID &id )
+{
+	Erase( m_DirtyStaticBodies, id );
 }
 
 //-------------------------------------------------------------------------------------------------
