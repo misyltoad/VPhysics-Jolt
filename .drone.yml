@@ -1,0 +1,75 @@
+kind: pipeline
+type: docker
+name: Build and Push Windows Binaries
+
+# This build script is used internally
+# to provide GMod builds as those cannot be provided
+# using any publicly available SDKs.
+
+clone:
+  # Use our own cloning so we can grab both the
+  # src and game repos, submodules, depth etc.
+  disable: true
+
+environment:
+  GIT_LFS_SKIP_SMUDGE: 1
+  WINEDEBUG: -all
+  WINEESYNC: 1
+  WINEFSYNC: 1
+
+steps:
+- name: Clone VitaminSource Code
+  image: alpine/git
+  commands: 
+  - git clone --depth 1 --recursive https://git.froggi.es/joshua/MiniVitaminSource src
+  - git -C src checkout main
+
+- name: Clone VPhysics Jolt
+  image: alpine/git
+  commands:
+  - cd src
+  - git clone --depth 1 --recursive https://git.froggi.es/joshua/vphysics_jolt vphysics_jolt
+  - git -C vphysics_jolt checkout $DRONE_COMMIT
+  depends_on:
+  - Clone VitaminSource Code
+
+- name: Clone Builds
+  image: alpine/git
+  commands:
+  - git clone --depth 1 --recursive https://git.froggi.es/joshua/vphysics_jolt_gmod_builds game
+  - git -C game checkout $DRONE_BRANCH
+
+- name: Build for Windows
+  pull: never
+  image: registry.froggi.es/joshua/msvc-wine
+  commands:
+  - cd src
+  - wine create_jolt_static.bat
+  - wine build_auto_jolt.bat
+  depends_on:
+  - Clone VitaminSource Code
+  - Clone VPhysics Jolt
+
+- name: Build for Linux
+  pull: never
+  image: registry.froggi.es/joshua/debian11-vitamin
+  commands:
+  - cd src
+  - ./create_jolt_static_projects.sh
+  - make -f jolt.mak -j 8
+  depends_on:
+  - Clone VitaminSource Code
+  - Clone VPhysics Jolt
+
+- name: Push Builds
+  image: alpine/git
+  commands:
+  - cd game
+  - git add .
+  - git commit -m "Update binaries as of $DRONE_COMMIT" || true
+  - git pull --rebase
+  - git push
+  depends_on:
+  - Build for Windows
+  - Build for Linux
+  - Clone Builds
