@@ -103,7 +103,7 @@ The next step is to build our makefiles by running the premade script `createjol
 ./createjoltprojects.sh
 ```
 
-Once the script has finished running you should now have a file name `jolt.mak` in the current directory. Verify you do and now run it with the command below. This command automatically will (and is recommended to) use all available CPU threads. If you want to specify it yourself, replace `` `nproc` `` with a number less than or equal to your max number of threads. To be clear, this only affects speed.
+Once the script has finished running you should now have a file name `jolt.mak` in the current directory. Verify you do and now run it with the command below. This command automatically will (and is recommended to) use all available CPU threads. If you want to specify it yourself, replace `` `nproc` `` with a number less than or equal to your max number of threads. To be clear, this only affects compile speed.
 ```bash
 make -j `nproc` -f jolt.mak
 ```
@@ -115,7 +115,7 @@ make -j 8 -f jolt.mak
 
 Congratulations!
 
-If the console output `LINKING` AND `COPYING TO` messages, that means your build was successful and you may retrieve your `vphysics_jolt.so` and `vphysics_jolt_srv.so` files which will be located in `mini-source-sdk/sdk2013-mp/game/bin/`.
+If the console outputs `LINKING` *and* `COPYING TO` messages, that means your build was successful and you may retrieve your `vphysics_jolt.so` and `vphysics_jolt_srv.so` files which will be located in `mini-source-sdk/sdk2013-mp/game/bin/`.
 
 ### Build errors (distrobution independent)
 
@@ -125,7 +125,7 @@ Common build errors you may run into building on linux and their solutions.
 
 This error may come up between different versions of g++, the easist way to fix this is to edit `devtools/makefile_base_posix.mak` at approximately `line 47` and change `-std=gnu++20` to `-std=gnu++2a`.
 
-The full change should like similar to this. Starting as:
+The full change should look similar to this. Starting as:
 ```makefile
 CXXFLAGS = $(CFLAGS) $(WARN_CXX_FLAGS) -std=gnu++20 -Wno-narrowing -Wno-register -Wno-deprecated-enum-enum-c    onversion -Wno-deprecated-declarations -fpermissive -Wno-volatile -Wno-ignored-attributes -I/usr/include/freetype2
 ```
