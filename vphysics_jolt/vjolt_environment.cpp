@@ -314,6 +314,8 @@ IPhysicsObject *JoltPhysicsEnvironment::CreatePolyObject( const CPhysCollide *pC
 	settings.mMassPropertiesOverride.mMass = params.mass;
 	//settings.mMassPropertiesOverride.mInertia = JPH::Mat44::sIdentity() * params.inertia;
 	settings.mOverrideMassProperties = JPH::EOverrideMassProperties::CalculateInertia; // JPH::EOverrideMassProperties::MassAndInertiaProvided;
+	settings.mMaxLinearVelocity = MaxVelocity();
+	settings.mMaxAngularVelocity = MaxAngularVelocity();
 
 	if ( m_bUseLinearCast )
 		settings.mMotionQuality = JPH::EMotionQuality::LinearCast;
@@ -362,6 +364,8 @@ IPhysicsObject *JoltPhysicsEnvironment::CreateSphereObject( float radius, int ma
 		settings.mMassPropertiesOverride.mMass = params.mass;
 		//settings.mMassPropertiesOverride.mInertia = JPH::Mat44::sIdentity() * params.inertia;
 		settings.mOverrideMassProperties = JPH::EOverrideMassProperties::CalculateInertia;//JPH::EOverrideMassProperties::MassAndInertiaProvided;
+		settings.mMaxLinearVelocity = MaxVelocity();
+		settings.mMaxAngularVelocity = MaxAngularVelocity();
 	}
 
 	JPH::BodyInterface &bodyInterface = m_PhysicsSystem.GetBodyInterfaceNoLock();
@@ -1177,11 +1181,73 @@ void JoltPhysicsEnvironment::SweepCollideable( const CPhysCollide *pCollide, con
 void JoltPhysicsEnvironment::GetPerformanceSettings( physics_performanceparams_t *pOutput ) const
 {
 	Log_Stub( LOG_VJolt );
+
+	*pOutput = m_PhysicsPerformanceParams;
 }
 
 void JoltPhysicsEnvironment::SetPerformanceSettings( const physics_performanceparams_t *pSettings )
 {
 	Log_Stub( LOG_VJolt );
+
+	m_PhysicsPerformanceParams = *pSettings;
+
+	m_PhysicsSystem.GetBodies(m_CachedBodies);
+
+	for ( auto& id : m_CachedBodies )
+	{
+		JPH::Body* pBody = m_PhysicsSystem.GetBodyLockInterfaceNoLock().TryGetBody( id );
+
+		if ( pBody )
+		{
+			JPH::MotionProperties* pMotionProperties = pBody->GetMotionProperties();
+
+			if ( pMotionProperties )
+			{
+				pMotionProperties->SetMaxLinearVelocity( pSettings->maxVelocity );
+				pMotionProperties->SetMaxAngularVelocity( pSettings->maxAngularVelocity * M_PI_F / 180 );
+			}
+		}
+	}
+}
+
+inline int JoltPhysicsEnvironment::MaxCollisionsPerObjectPerTimestep() const
+{
+	return m_PhysicsPerformanceParams.maxCollisionsPerObjectPerTimestep;
+}
+
+inline int JoltPhysicsEnvironment::MaxCollisionChecksPerTimestep() const
+{
+	return m_PhysicsPerformanceParams.maxCollisionChecksPerTimestep;
+}
+
+inline float JoltPhysicsEnvironment::MaxVelocity() const
+{
+	return m_PhysicsPerformanceParams.maxVelocity;
+}
+
+inline float JoltPhysicsEnvironment::MaxAngularVelocity() const
+{
+	return m_PhysicsPerformanceParams.maxAngularVelocity;
+}
+
+inline float JoltPhysicsEnvironment::LookAheadTimeObjectsVsWorld() const
+{
+	return m_PhysicsPerformanceParams.lookAheadTimeObjectsVsWorld;
+}
+
+inline float JoltPhysicsEnvironment::LookAheadTimeObjectsVsObject() const
+{
+	return m_PhysicsPerformanceParams.lookAheadTimeObjectsVsObject;
+}
+
+inline float JoltPhysicsEnvironment::MinFrictionMass() const
+{
+	return m_PhysicsPerformanceParams.minFrictionMass;
+}
+
+inline float JoltPhysicsEnvironment::MaxFrictionMass() const
+{
+	return m_PhysicsPerformanceParams.maxFrictionMass;
 }
 
 //-------------------------------------------------------------------------------------------------
