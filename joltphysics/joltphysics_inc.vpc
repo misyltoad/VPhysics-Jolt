@@ -5,7 +5,7 @@
 //-----------------------------------------------------------------------------
 
 $Macro SRCDIR		"..\.."
-$Macro OUTLIBNAME	"joltphysics"
+$Macro OUTLIBNAME	"$PROJNAME"
 
 $Include "$SRCDIR\vpc_scripts\source_lib_base.vpc"
 
@@ -20,7 +20,25 @@ $Configuration
 	}
 }
 
-$Project "JoltPhysics"
+$Configuration	"Debug"
+{
+	$General
+	{
+		//$OutputDirectory			".\Debug_$VOLTARCH$PLATSUBDIR"		[$WINDOWS]
+		$IntermediateDirectory		".\Debug_$VOLTARCH$PLATSUBDIR"		[$WINDOWS]
+	}
+}
+
+$Configuration	"Release"
+{
+	$General
+	{
+		//$OutputDirectory			".\Release_$VOLTARCH$PLATSUBDIR"	[$WINDOWS]
+		$IntermediateDirectory		".\Release_$VOLTARCH$PLATSUBDIR"	[$WINDOWS]
+	}
+}
+
+$Project "$PROJNAME"
 {
 	$Folder	"Precompiled Header"
 	{

@@ -1,6 +1,7 @@
 # Multi-platform
 *.vpc_cache
 *.vpc_crc
+*.sentinel
 .vscode
 .cache
 
@@ -10,6 +11,7 @@
 *.filters
 .vs
 enc_temp_folder/
+*.enc
 *.suo
 *.user
 *.FileListAbsolute.txt

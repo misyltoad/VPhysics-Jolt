@@ -1,0 +1,12 @@
+//-----------------------------------------------------------------------------
+//	VPHYSICS_WRAPPER_EXTERNAL.VPC
+//
+//	Project Script
+//-----------------------------------------------------------------------------
+
+// Existing Source engine games don't know about Volt, so public wrapper builds
+// just output "vphysics.dll"
+
+$Macro WRAPPER_NAME		"vphysics"
+
+$Include "vphysics_wrapper_inc.vpc"

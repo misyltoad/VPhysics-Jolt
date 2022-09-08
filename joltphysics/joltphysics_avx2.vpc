@@ -1,9 +1,12 @@
 //-----------------------------------------------------------------------------
-//	VPHYSICS_JOLT_STATIC.VPC
+//	JOLTPHYSICS_AVX2.VPC
 //
 //	Project Script
 //-----------------------------------------------------------------------------
 
-$Macro PROJNAME		"vphysics_jolt_static"
+$Macro PROJNAME				"joltphysics_avx2"
 
-$Include "vphysics_jolt_inc.vpc"
+$Conditional VOLT_AVX2		"1"
+$Macro VOLTARCH				"AVX2"
+
+$Include "joltphysics_inc.vpc"

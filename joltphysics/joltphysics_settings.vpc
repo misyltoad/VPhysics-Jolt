@@ -2,6 +2,8 @@
 // Configuration settings for Jolt Physics
 //
 
+$MacroRequired		"VOLTARCH"
+
 $Configuration
 {
 	$Compiler
@@ -11,14 +13,18 @@ $Configuration
 		$PreprocessorDefinitions		"$BASE;JPH_DISABLE_CUSTOM_ALLOCATOR;JPH_DEBUG_RENDERER"
 		$PreprocessorDefinitions		"$BASE;JPH_ENABLE_ASSERTS"		[$DEVELOPMENT_ONLY]
 		//$PreprocessorDefinitions		"$BASE;JPH_PROFILE_ENABLED"		[$DEVELOPMENT_ONLY]
-		
-		// CPU feature macros, we may want to tune these before release.
-		$PreprocessorDefinitions		"$BASE;JPH_USE_SSE4_1;JPH_USE_SSE4_2;JPH_USE_LZCNT;JPH_USE_TZCNT;JPH_USE_F16C;JPH_USE_FMADD"
 
-		$GCC_ExtraCompilerFlags			"$BASE -msse4.1 -msse4.2 -mlzcnt -mf16c -mfma -mbmi"
+		// Feature test stuff for the AVX2 build
+		$PreprocessorDefinitions		"$BASE;JPH_USE_SSE4_1;JPH_USE_SSE4_2;JPH_USE_AVX;JPH_USE_AVX2;JPH_USE_LZCNT;JPH_USE_TZCNT;JPH_USE_F16C;JPH_USE_FMADD"	[$VOLT_AVX2]
+		$GCC_ExtraCompilerFlags			"$BASE -msse4.1 -msse4.2 -mavx2 -mlzcnt -mf16c -mfma -mbmi"	[$VOLT_AVX2]
+		$EnableEnhancedInstructionSet	"Advanced Vector Extensions 2 (/arch:AVX2)"					[$VOLT_AVX2]
+
+		// Feature test stuff for the SSE 4.2 build
+		$PreprocessorDefinitions		"$BASE;JPH_USE_SSE4_1;JPH_USE_SSE4_2"			[$VOLT_SSE42]
+		$GCC_ExtraCompilerFlags			"$BASE -msse4.1 -msse4.2"						[$VOLT_SSE42]
+		$EnableEnhancedInstructionSet	"Streaming SIMD Extensions 2 (/arch:SSE2)"		[$WIN32 && $VOLT_SSE42]		// Source 2013 doesn't enable this by default
 		
-		// We DO want to comment this line out for release, AVX 1 & 2 adoption isn't reliable enough yet
-		// $EnableEnhancedInstructionSet	"Advanced Vector Extensions 2 (/arch:AVX2)"		[$DEVELOPMENT_ONLY]
+		// Feature test stuff for the SSE 2 build
+		$EnableEnhancedInstructionSet	"Streaming SIMD Extensions 2 (/arch:SSE2)"		[$WIN32 && $VOLT_SSE2]		// Source 2013 doesn't enable this by default
 	}
 }
-
