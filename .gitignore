@@ -1,6 +1,7 @@
 # Multi-platform
 *.vpc_cache
 *.vpc_crc
+*.sentinel
 .vscode
 .cache
 
