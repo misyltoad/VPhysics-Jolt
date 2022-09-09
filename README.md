@@ -1,6 +1,6 @@
 ![VPhysics Jolt Logo](assets/cube_base_nobg.png "VPhysics Jolt")
 
-# What is Volt? ⚡
+## What is Volt? ⚡
 
 Volt (VPhysics Jolt) is a replacement for Source's VPhysics which uses IVP/Havok<br>
 Created by [Joshua Ashton (🐸✨)](https://github.com/Joshua-Ashton) [@phys_ballsocket](https://twitter.com/phys_ballsocket) and [Josh Dowell (Slartibarty)](https://github.com/Slartibarty) [@Slartbarty](https://twitter.com/Slartbarty).
