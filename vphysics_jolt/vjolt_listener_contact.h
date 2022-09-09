@@ -552,7 +552,7 @@ private:
 		{
 			for ( uint32 thread = m_Mask; thread; thread &= thread - 1 )
 			{
-				const uint32 i = tzcnt( thread );
+				const uint32 i = JPH::CountTrailingZeros( thread );
 				for ( auto &event : m_Events[ i ] )
 					func( event );
 
