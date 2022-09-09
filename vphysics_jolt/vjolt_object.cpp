@@ -68,6 +68,8 @@ JoltPhysicsObject::~JoltPhysicsObject()
 	for ( int i = m_destroyedListeners.Count() - 1; i >= 0; i-- )
 		m_destroyedListeners[ i ]->OnJoltPhysicsObjectDestroyed( this );
 
+	m_pEnvironment->RemoveDirtyStaticBody( GetBodyID() );
+
 	JPH::BodyInterface& bodyInterface = m_pPhysicsSystem->GetBodyInterfaceNoLock();
 	bodyInterface.DestroyBody( GetBodyID() );
 }
