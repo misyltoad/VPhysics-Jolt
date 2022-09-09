@@ -285,12 +285,12 @@ static uint32 GetDegreesOfFreedom( const constraint_ragdollparams_t &ragdoll )
 bool JoltPhysicsConstraint::InitialiseHingeFromRagdoll( IPhysicsConstraintGroup* pGroup, const constraint_ragdollparams_t& ragdoll )
 {
 	const uint32 uDOFMask = GetDegreesOfFreedom( ragdoll );
-	const uint32 uDOFCount = popcnt( uDOFMask );
+	const uint32 uDOFCount = JPH::CountBits( uDOFMask );
 
 	if ( uDOFCount != 1 )
 		return false;
 
-	const uint32 uDOF = tzcnt( uDOFMask );
+	const uint32 uDOF = JPH::CountTrailingZeros( uDOFMask );
 	const Vector vecNextDOFAxis = DOFToAxis( NextDOF( uDOF ) );
 
 	matrix3x4_t refObjToWorld;
