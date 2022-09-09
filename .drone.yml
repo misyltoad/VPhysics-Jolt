@@ -65,6 +65,8 @@ steps:
   image: alpine/git
   commands:
   - cd game
+  - cp bin/linux64/vphysics.so bin/linux64/vphysics_client.so
+  - cp bin/linux64/vphysics.so.dbg bin/linux64/vphysics_client.so.dbg
   - git add .
   - git commit -m "Update binaries as of $DRONE_COMMIT" || true
   - git pull --rebase

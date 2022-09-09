@@ -312,56 +312,6 @@ void ActOnSubShapes( const JPH::Shape *pShape, Func ShapeFunc )
 	ShapeFunc( static_cast< const ShapeType * >( UndecorateShape( pShape ) ), JPH::Mat44::sIdentity() );
 }
 
-inline uint32 popcntStep( uint32 n, uint32 mask, uint32 shift )
-{
-	return ( n & mask ) + ( ( n & ~mask ) >> shift );
-}
-  
-inline uint32 popcnt( uint32 n )
-{
-	n = popcntStep(n, 0x55555555, 1);
-	n = popcntStep(n, 0x33333333, 2);
-	n = popcntStep(n, 0x0F0F0F0F, 4);
-	n = popcntStep(n, 0x00FF00FF, 8);
-	n = popcntStep(n, 0x0000FFFF, 16);
-	return n;
-}
-
-inline uint32 tzcnt( uint32 n )
-{
-#if defined(_MSC_VER) && !defined(__clang__)
-	return _tzcnt_u32( n );
-#elif defined(__BMI__)
-	return __tzcnt_u32( n );
-#elif defined(__GNUC__) || defined(__clang__)
-	// tzcnt is encoded as rep bsf, so we can use it on all
-	// processors, but the behaviour of zero inputs differs:
-	// - bsf:   zf = 1, cf = ?, result = ?
-	// - tzcnt: zf = 0, cf = 1, result = 32
-	// We'll have to handle this case manually.
-	uint32 res;
-	uint32 tmp;
-	asm (
-		"tzcnt %2, %0;"
-		"mov  $32, %1;"
-		"test  %2, %2;"
-		"cmovz %1, %0;"
-		: "=&r" (res), "=&r" (tmp)
-		: "r" (n)
-		: "cc");
-	return res;
-#else
-	uint32 r = 31;
-	n &= -n;
-	r -= ( n & 0x0000FFFF ) ? 16 : 0;
-	r -= ( n & 0x00FF00FF ) ?  8 : 0;
-	r -= ( n & 0x0F0F0F0F ) ?  4 : 0;
-	r -= ( n & 0x33333333 ) ?  2 : 0;
-	r -= ( n & 0x55555555 ) ?  1 : 0;
-	return n != 0 ? r : 32;
-#endif
-}
-
 template< typename T, typename Value >
 constexpr void Erase( T &c, const Value &value )
 {

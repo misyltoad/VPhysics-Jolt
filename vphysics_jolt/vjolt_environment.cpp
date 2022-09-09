@@ -182,6 +182,8 @@ JoltBPLayerInterfaceImpl JoltPhysicsEnvironment::s_BPLayerInterface;
 JoltPhysicsEnvironment::JoltPhysicsEnvironment()
 	: m_ContactListener( m_PhysicsSystem )
 {
+	m_PerformanceParams.Defaults();
+
 	m_PhysicsSystem.Init(
 		kMaxBodies, kNumBodyMutexes, kMaxBodyPairs, kMaxContactConstraints,
 		s_BPLayerInterface, JoltBroadPhaseCanCollide, JoltObjectCanCollide );
@@ -1176,12 +1178,20 @@ void JoltPhysicsEnvironment::SweepCollideable( const CPhysCollide *pCollide, con
 
 void JoltPhysicsEnvironment::GetPerformanceSettings( physics_performanceparams_t *pOutput ) const
 {
-	Log_Stub( LOG_VJolt );
+	if ( pOutput )
+		*pOutput = m_PerformanceParams;
 }
 
 void JoltPhysicsEnvironment::SetPerformanceSettings( const physics_performanceparams_t *pSettings )
 {
-	Log_Stub( LOG_VJolt );
+	if ( pSettings )
+	{
+		m_PerformanceParams = *pSettings;
+
+		// Normalize these values to match VPhysics behaviour.
+		m_PerformanceParams.minFrictionMass = Clamp( m_PerformanceParams.minFrictionMass, 1.0f, VPHYSICS_MAX_MASS );
+		m_PerformanceParams.maxFrictionMass = Clamp( m_PerformanceParams.maxFrictionMass, 1.0f, VPHYSICS_MAX_MASS );
+	}
 }
 
 //-------------------------------------------------------------------------------------------------

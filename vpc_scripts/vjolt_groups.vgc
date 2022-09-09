@@ -21,16 +21,3 @@ $Group "jolt"
 	"vphysics_jolt_sse2"
 	"vphysics_wrapper_external"
 }
-
-$Group "jolt_static"
-{
-	"appframework"
-	"interfaces"
-	"tier0_static"
-	"tier1"
-	"tier2"
-	"mathlib"
-	"joltphysics"
-	"vphysics_jolt_static"
-	"vstdlib_static"
-}
