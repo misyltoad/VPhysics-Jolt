@@ -151,7 +151,7 @@ void JoltPhysicsConstraint::SetLinearMotor( float speed, float maxLinearImpulse 
 	{
 		case CONSTRAINT_SLIDING:
 		{
-			JPH::SliderConstraint *pConstraint = static_cast<JPH::SliderConstraint *>( m_pConstraint );
+			JPH::SliderConstraint *pConstraint = static_cast<JPH::SliderConstraint *>( m_pConstraint.GetPtr() );
 			pConstraint->SetMotorState( speed ? JPH::EMotorState::Velocity : JPH::EMotorState::Off );
 			pConstraint->SetTargetVelocity( speed );
 
@@ -184,7 +184,7 @@ void JoltPhysicsConstraint::SetAngularMotor( float rotSpeed, float maxAngularImp
 			// :/
 			VJoltAssert( m_pConstraint->GetSubType() == JPH::EConstraintSubType::SixDOF );
 
-			JPH::SixDOFConstraint *pConstraint = static_cast<JPH::SixDOFConstraint *>( m_pConstraint );
+			JPH::SixDOFConstraint *pConstraint = static_cast<JPH::SixDOFConstraint *>( m_pConstraint.GetPtr() );
 			pConstraint->SetTargetAngularVelocityCS( JPH::Vec3( rotSpeed, rotSpeed, rotSpeed ) );
 			pConstraint->SetMaxFriction( JPH::SixDOFConstraint::EAxis::RotationX, maxAngularImpulse );
 			pConstraint->SetMaxFriction( JPH::SixDOFConstraint::EAxis::RotationY, maxAngularImpulse );
@@ -194,7 +194,7 @@ void JoltPhysicsConstraint::SetAngularMotor( float rotSpeed, float maxAngularImp
 
 		case CONSTRAINT_HINGE:
 		{
-			JPH::HingeConstraint *pConstraint = static_cast<JPH::HingeConstraint *>( m_pConstraint );
+			JPH::HingeConstraint *pConstraint = static_cast<JPH::HingeConstraint *>( m_pConstraint.GetPtr() );
 			pConstraint->SetMotorState( rotSpeed ? JPH::EMotorState::Velocity : JPH::EMotorState::Off );
 			pConstraint->SetTargetAngularVelocity( rotSpeed );
 
@@ -494,7 +494,7 @@ void JoltPhysicsConstraint::InitialiseSliding( IPhysicsConstraintGroup *pGroup, 
 
 	if ( sliding.velocity )
 	{
-		JPH::SliderConstraint *pConstraint = static_cast<JPH::SliderConstraint *>( m_pConstraint );
+		JPH::SliderConstraint *pConstraint = static_cast<JPH::SliderConstraint *>( m_pConstraint.GetPtr() );
 		pConstraint->SetMotorState( JPH::EMotorState::Velocity );
 		pConstraint->SetTargetVelocity( SourceToJolt::Distance( sliding.velocity ) );
 	}
@@ -618,7 +618,6 @@ void JoltPhysicsConstraint::DestroyConstraint()
 	if ( m_pConstraint )
 	{
 		m_pPhysicsSystem->RemoveConstraint( m_pConstraint );
-		m_pConstraint->Release();
 		m_pConstraint = nullptr;
 	}
 }

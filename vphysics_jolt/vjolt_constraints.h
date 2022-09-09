@@ -88,14 +88,14 @@ private:
 
 	void DestroyConstraint();
 
-	JoltPhysicsObject *m_pObjReference = nullptr;
-	JoltPhysicsObject *m_pObjAttached = nullptr;
-	JPH::Constraint *m_pConstraint = nullptr;
-	constraintType_t m_ConstraintType = CONSTRAINT_UNKNOWN;
+	JoltPhysicsObject			*m_pObjReference = nullptr;
+	JoltPhysicsObject			*m_pObjAttached = nullptr;
+	JPH::Ref< JPH::Constraint > m_pConstraint;
+	constraintType_t			m_ConstraintType = CONSTRAINT_UNKNOWN;
 
-	JoltPhysicsConstraintGroup *m_pGroup = nullptr;
+	JoltPhysicsConstraintGroup	*m_pGroup = nullptr;
 
-	void *m_pGameData = nullptr;
-	JoltPhysicsEnvironment *m_pPhysicsEnvironment = nullptr;
-	JPH::PhysicsSystem *m_pPhysicsSystem = nullptr;
+	void						*m_pGameData = nullptr;
+	JoltPhysicsEnvironment		*m_pPhysicsEnvironment = nullptr;
+	JPH::PhysicsSystem			*m_pPhysicsSystem = nullptr;
 };
