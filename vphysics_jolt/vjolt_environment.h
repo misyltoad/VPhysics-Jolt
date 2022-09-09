@@ -225,4 +225,6 @@ private:
 	bool m_EnableConstraintNotify = false;
 
 	mutable bool m_bActiveObjectCountFirst = true;
+
+	physics_performanceparams_t m_PerformanceParams;
 };
