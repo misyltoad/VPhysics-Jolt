@@ -12,6 +12,8 @@
 // Does not and will not contain *any* data.
 class CPhysCollide
 {
+	~CPhysCollide() = delete;
+
 public:
 	JPH::Shape* ToShape()
 	{
@@ -42,6 +44,8 @@ public:
 // Does not and will not contain *any* data.
 class CPhysConvex
 {
+	~CPhysConvex() = delete;
+
 public:
 	JPH::ConvexShape* ToConvexShape()
 	{
