@@ -700,7 +700,7 @@ void JoltPhysicsCollision::VCollideUnload( vcollide_t *pVCollide )
 {
 	VCollideFreeUserData( pVCollide );
 	for ( int i = 0; i < pVCollide->solidCount; i++ )
-		delete pVCollide->solids[ i ];
+		delete pVCollide->solids[ i ]->ToShape();
 
 	delete[] pVCollide->solids;
 	delete[] pVCollide->pKeyValues;
