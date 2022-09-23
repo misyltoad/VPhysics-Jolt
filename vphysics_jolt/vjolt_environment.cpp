@@ -1188,14 +1188,14 @@ void JoltPhysicsEnvironment::GetPerformanceSettings( physics_performanceparams_t
 
 void JoltPhysicsEnvironment::SetPerformanceSettings( const physics_performanceparams_t *pSettings )
 {
-	if ( pSettings )
-	{
-		m_PerformanceParams = *pSettings;
+	if ( !pSettings )
+		return;
 
-		// Normalize these values to match VPhysics behaviour.
-		m_PerformanceParams.minFrictionMass = Clamp( m_PerformanceParams.minFrictionMass, 1.0f, VPHYSICS_MAX_MASS );
-		m_PerformanceParams.maxFrictionMass = Clamp( m_PerformanceParams.maxFrictionMass, 1.0f, VPHYSICS_MAX_MASS );
-	}
+	m_PerformanceParams = *pSettings;
+
+	// Normalize these values to match VPhysics behaviour.
+	m_PerformanceParams.minFrictionMass = Clamp( m_PerformanceParams.minFrictionMass, 1.0f, VPHYSICS_MAX_MASS );
+	m_PerformanceParams.maxFrictionMass = Clamp( m_PerformanceParams.maxFrictionMass, 1.0f, VPHYSICS_MAX_MASS );
 
 	m_PhysicsSystem.GetBodies(m_CachedBodies);
 
