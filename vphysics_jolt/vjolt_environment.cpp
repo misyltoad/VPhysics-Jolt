@@ -182,6 +182,8 @@ JoltBPLayerInterfaceImpl JoltPhysicsEnvironment::s_BPLayerInterface;
 JoltPhysicsEnvironment::JoltPhysicsEnvironment()
 	: m_ContactListener( m_PhysicsSystem )
 {
+	m_PerformanceParams.Defaults();
+
 	m_PhysicsSystem.Init(
 		kMaxBodies, kNumBodyMutexes, kMaxBodyPairs, kMaxContactConstraints,
 		s_BPLayerInterface, JoltBroadPhaseCanCollide, JoltObjectCanCollide );
@@ -1180,16 +1182,20 @@ void JoltPhysicsEnvironment::SweepCollideable( const CPhysCollide *pCollide, con
 
 void JoltPhysicsEnvironment::GetPerformanceSettings( physics_performanceparams_t *pOutput ) const
 {
-	Log_Stub( LOG_VJolt );
-
-	*pOutput = m_PhysicsPerformanceParams;
+	if ( pOutput )
+		*pOutput = m_PerformanceParams;
 }
 
 void JoltPhysicsEnvironment::SetPerformanceSettings( const physics_performanceparams_t *pSettings )
 {
-	Log_Stub( LOG_VJolt );
+	if ( pSettings )
+	{
+		m_PerformanceParams = *pSettings;
 
-	m_PhysicsPerformanceParams = *pSettings;
+		// Normalize these values to match VPhysics behaviour.
+		m_PerformanceParams.minFrictionMass = Clamp( m_PerformanceParams.minFrictionMass, 1.0f, VPHYSICS_MAX_MASS );
+		m_PerformanceParams.maxFrictionMass = Clamp( m_PerformanceParams.maxFrictionMass, 1.0f, VPHYSICS_MAX_MASS );
+	}
 
 	m_PhysicsSystem.GetBodies(m_CachedBodies);
 
@@ -1212,42 +1218,42 @@ void JoltPhysicsEnvironment::SetPerformanceSettings( const physics_performancepa
 
 inline int JoltPhysicsEnvironment::MaxCollisionsPerObjectPerTimestep() const
 {
-	return m_PhysicsPerformanceParams.maxCollisionsPerObjectPerTimestep;
+	return m_PerformanceParams.maxCollisionsPerObjectPerTimestep;
 }
 
 inline int JoltPhysicsEnvironment::MaxCollisionChecksPerTimestep() const
 {
-	return m_PhysicsPerformanceParams.maxCollisionChecksPerTimestep;
+	return m_PerformanceParams.maxCollisionChecksPerTimestep;
 }
 
 inline float JoltPhysicsEnvironment::MaxVelocity() const
 {
-	return m_PhysicsPerformanceParams.maxVelocity;
+	return m_PerformanceParams.maxVelocity;
 }
 
 inline float JoltPhysicsEnvironment::MaxAngularVelocity() const
 {
-	return m_PhysicsPerformanceParams.maxAngularVelocity;
+	return m_PerformanceParams.maxAngularVelocity;
 }
 
 inline float JoltPhysicsEnvironment::LookAheadTimeObjectsVsWorld() const
 {
-	return m_PhysicsPerformanceParams.lookAheadTimeObjectsVsWorld;
+	return m_PerformanceParams.lookAheadTimeObjectsVsWorld;
 }
 
 inline float JoltPhysicsEnvironment::LookAheadTimeObjectsVsObject() const
 {
-	return m_PhysicsPerformanceParams.lookAheadTimeObjectsVsObject;
+	return m_PerformanceParams.lookAheadTimeObjectsVsObject;
 }
 
 inline float JoltPhysicsEnvironment::MinFrictionMass() const
 {
-	return m_PhysicsPerformanceParams.minFrictionMass;
+	return m_PerformanceParams.minFrictionMass;
 }
 
 inline float JoltPhysicsEnvironment::MaxFrictionMass() const
 {
-	return m_PhysicsPerformanceParams.maxFrictionMass;
+	return m_PerformanceParams.maxFrictionMass;
 }
 
 //-------------------------------------------------------------------------------------------------

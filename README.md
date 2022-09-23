@@ -59,6 +59,8 @@ Volt should build fine against Source SDK 2013 and Alien Swarm SDK on a MSVC or 
 
 Unfortunately we cannot redistribute the additional code/headers needed to build Volt for games such as Garry's Mod which uses a different VPhysics interface (CS:GO's) to what is found in the Valve-provided public SDKs.
 
+For full build instructions pertaining to SDK 2013, refernce [build.md](/build.md).
+
 ## Download
 
 Development builds for each commit for SDK2013 SP/MP + ASW are available as artifacts on each commit on GitHub through GitHub Actions.</br>
@@ -77,7 +79,7 @@ For each release, binary builds are provided for Garry's Mod and Source SDK 2013
 ### Lots of Balls Test
 [![Lots of Balls Test](https://img.youtube.com/vi/tYfiTyRtmz8/0.jpg)](https://www.youtube.com/watch?v=tYfiTyRtmz8 "Lots of Balls Test")
 
-### Wheels + Weld Car Dupe Test 
+### Wheels + Weld Car Dupe Test
 [![Weld Car Dupe Test](https://img.youtube.com/vi/5_QbbXbIrg8/0.jpg)](https://www.youtube.com/watch?v=5_QbbXbIrg8 "Weld Car Dupe Test")
 
 ### Door + NPC (Physics Shadowed Objects) Test

@@ -5,6 +5,7 @@ on: [push, pull_request, workflow_dispatch]
 jobs:
   windows:
     strategy:
+      fail-fast: false
       matrix:
         source_branch: [sdk2013-sp, sdk2013-mp, asw]
 
@@ -12,21 +13,17 @@ jobs:
 
     steps:
     - name: Checkout Mini Source SDK
-      id: checkout-minisdk
       uses: actions/checkout@v3
       with:
-        repository: 'Joshua-Ashton/mini-source-sdk'
+        repository: Joshua-Ashton/mini-source-sdk
 
     - name: Checkout VPhysics Jolt
-      id: checkout-code
       uses: actions/checkout@v3
       with:
-        path: '${{ matrix.source_branch }}/src/vphysics_jolt'
+        path: ${{ matrix.source_branch }}/src/vphysics_jolt
         submodules: recursive
 
     - name: Find Visual Studio
-      id: find-vs
-      shell: pwsh
       run: |
         $installationPath = Get-VSSetupInstance `
           | Select-VSSetupInstance -Require Microsoft.VisualStudio.Workload.NativeDesktop -Latest `
@@ -35,9 +32,7 @@ jobs:
           | Out-File -FilePath "${Env:GITHUB_ENV}" -Append
 
     - name: Build MSVC x86
-      id: build
-      shell: pwsh
-      working-directory: '${{ matrix.source_branch }}/src'
+      working-directory: ${{ matrix.source_branch }}/src
       run: |
         & "${Env:COMSPEC}" /s /c "`"${Env:VSDEVCMD}`" -arch=x86 -host_arch=x64 -no_logo && set" `
           | % { , ($_ -Split '=', 2) } `
@@ -48,8 +43,7 @@ jobs:
         msbuild jolt.sln /nodeReuse:false /t:Rebuild /p:Configuration=Release /p:Platform=x86 /m /v:minimal
 
     - name: Upload artifacts
-      id: upload-artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: vphysics_jolt_${{ matrix.source_branch }}_win32
         path: ${{ matrix.source_branch }}/game
@@ -57,6 +51,7 @@ jobs:
 
   linux:
     strategy:
+      fail-fast: false
       matrix:
         source_branch: [sdk2013-sp, sdk2013-mp]
 
@@ -65,37 +60,30 @@ jobs:
 
     steps:
     - name: Install Dependencies
-      id: install-deps
-      shell: bash
       run: |
         dpkg --add-architecture i386
         apt update
         apt install -y build-essential git libstdc++6:i386 gcc-multilib g++-multilib
 
     - name: Checkout Mini Source SDK
-      id: checkout-minisdk
       uses: actions/checkout@v3
       with:
-        repository: 'Joshua-Ashton/mini-source-sdk'
+        repository: Joshua-Ashton/mini-source-sdk
 
     - name: Checkout VPhysics Jolt
-      id: checkout-code
       uses: actions/checkout@v3
       with:
-        path: '${{ matrix.source_branch }}/src/vphysics_jolt'
+        path: ${{ matrix.source_branch }}/src/vphysics_jolt
         submodules: recursive
 
     - name: Build GCC x86
-      id: build
-      shell: bash
-      working-directory: '${{ matrix.source_branch }}/src'
+      working-directory: ${{ matrix.source_branch }}/src
       run: |
         ./createjoltprojects.sh
         make -f jolt.mak -j $(nproc)
 
     - name: Upload artifacts
-      id: upload-artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: vphysics_jolt_${{ matrix.source_branch }}_linux32
         path: ${{ matrix.source_branch }}/game

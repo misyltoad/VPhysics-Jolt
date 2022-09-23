@@ -1,0 +1,11 @@
+//-----------------------------------------------------------------------------
+//	VPHYSICS_WRAPPER_INTERNAL.VPC
+//
+//	Project Script
+//-----------------------------------------------------------------------------
+
+// This file is used when building for an engine that is aware of vphysics_jolt
+
+$Macro WRAPPER_NAME		"vphysics_jolt"
+
+$Include "vphysics_wrapper_inc.vpc"

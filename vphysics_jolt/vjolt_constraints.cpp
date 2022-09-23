@@ -151,7 +151,7 @@ void JoltPhysicsConstraint::SetLinearMotor( float speed, float maxLinearImpulse 
 	{
 		case CONSTRAINT_SLIDING:
 		{
-			JPH::SliderConstraint *pConstraint = static_cast<JPH::SliderConstraint *>( m_pConstraint );
+			JPH::SliderConstraint *pConstraint = static_cast<JPH::SliderConstraint *>( m_pConstraint.GetPtr() );
 			pConstraint->SetMotorState( speed ? JPH::EMotorState::Velocity : JPH::EMotorState::Off );
 			pConstraint->SetTargetVelocity( speed );
 
@@ -184,7 +184,7 @@ void JoltPhysicsConstraint::SetAngularMotor( float rotSpeed, float maxAngularImp
 			// :/
 			VJoltAssert( m_pConstraint->GetSubType() == JPH::EConstraintSubType::SixDOF );
 
-			JPH::SixDOFConstraint *pConstraint = static_cast<JPH::SixDOFConstraint *>( m_pConstraint );
+			JPH::SixDOFConstraint *pConstraint = static_cast<JPH::SixDOFConstraint *>( m_pConstraint.GetPtr() );
 			pConstraint->SetTargetAngularVelocityCS( JPH::Vec3( rotSpeed, rotSpeed, rotSpeed ) );
 			pConstraint->SetMaxFriction( JPH::SixDOFConstraint::EAxis::RotationX, maxAngularImpulse );
 			pConstraint->SetMaxFriction( JPH::SixDOFConstraint::EAxis::RotationY, maxAngularImpulse );
@@ -194,7 +194,7 @@ void JoltPhysicsConstraint::SetAngularMotor( float rotSpeed, float maxAngularImp
 
 		case CONSTRAINT_HINGE:
 		{
-			JPH::HingeConstraint *pConstraint = static_cast<JPH::HingeConstraint *>( m_pConstraint );
+			JPH::HingeConstraint *pConstraint = static_cast<JPH::HingeConstraint *>( m_pConstraint.GetPtr() );
 			pConstraint->SetMotorState( rotSpeed ? JPH::EMotorState::Velocity : JPH::EMotorState::Off );
 			pConstraint->SetTargetAngularVelocity( rotSpeed );
 
@@ -285,12 +285,12 @@ static uint32 GetDegreesOfFreedom( const constraint_ragdollparams_t &ragdoll )
 bool JoltPhysicsConstraint::InitialiseHingeFromRagdoll( IPhysicsConstraintGroup* pGroup, const constraint_ragdollparams_t& ragdoll )
 {
 	const uint32 uDOFMask = GetDegreesOfFreedom( ragdoll );
-	const uint32 uDOFCount = popcnt( uDOFMask );
+	const uint32 uDOFCount = JPH::CountBits( uDOFMask );
 
 	if ( uDOFCount != 1 )
 		return false;
 
-	const uint32 uDOF = tzcnt( uDOFMask );
+	const uint32 uDOF = JPH::CountTrailingZeros( uDOFMask );
 	const Vector vecNextDOFAxis = DOFToAxis( NextDOF( uDOF ) );
 
 	matrix3x4_t refObjToWorld;
@@ -494,7 +494,7 @@ void JoltPhysicsConstraint::InitialiseSliding( IPhysicsConstraintGroup *pGroup, 
 
 	if ( sliding.velocity )
 	{
-		JPH::SliderConstraint *pConstraint = static_cast<JPH::SliderConstraint *>( m_pConstraint );
+		JPH::SliderConstraint *pConstraint = static_cast<JPH::SliderConstraint *>( m_pConstraint.GetPtr() );
 		pConstraint->SetMotorState( JPH::EMotorState::Velocity );
 		pConstraint->SetTargetVelocity( SourceToJolt::Distance( sliding.velocity ) );
 	}
@@ -618,7 +618,6 @@ void JoltPhysicsConstraint::DestroyConstraint()
 	if ( m_pConstraint )
 	{
 		m_pPhysicsSystem->RemoveConstraint( m_pConstraint );
-		m_pConstraint->Release();
 		m_pConstraint = nullptr;
 	}
 }

@@ -237,5 +237,5 @@ private:
 
 	mutable bool m_bActiveObjectCountFirst = true;
 
-	physics_performanceparams_t m_PhysicsPerformanceParams;
+	physics_performanceparams_t m_PerformanceParams;
 };

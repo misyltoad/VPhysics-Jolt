@@ -4,14 +4,44 @@
 //	Project configurations for VPhysics Jolt
 //-----------------------------------------------------------------------------
 
-$Project "joltphysics"
+$Project "joltphysics_avx2"
 {
-	"vphysics_jolt/joltphysics/joltphysics.vpc"
+	"vphysics_jolt/joltphysics/joltphysics_avx2.vpc"
 }
 
-$Project "vphysics_jolt"
+$Project "joltphysics_sse42"
 {
-	"vphysics_jolt/vphysics_jolt/vphysics_jolt.vpc"
+	"vphysics_jolt/joltphysics/joltphysics_sse42.vpc"
+}
+
+$Project "joltphysics_sse2"
+{
+	"vphysics_jolt/joltphysics/joltphysics_sse2.vpc"
+}
+
+$Project "vphysics_jolt_avx2"
+{
+	"vphysics_jolt/vphysics_jolt/vphysics_jolt_avx2.vpc"
+}
+
+$Project "vphysics_jolt_sse42"
+{
+	"vphysics_jolt/vphysics_jolt/vphysics_jolt_sse42.vpc"
+}
+
+$Project "vphysics_jolt_sse2"
+{
+	"vphysics_jolt/vphysics_jolt/vphysics_jolt_sse2.vpc"
+}
+
+$Project "vphysics_wrapper_internal"
+{
+	"vphysics_jolt/vphysics_wrapper/vphysics_wrapper_internal.vpc"
+}
+
+$Project "vphysics_wrapper_external"
+{
+	"vphysics_jolt/vphysics_wrapper/vphysics_wrapper_external.vpc"
 }
 
 $Project "vphysics_jolt_static"
