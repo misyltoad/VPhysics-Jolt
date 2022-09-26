@@ -118,9 +118,12 @@ public:
 	{
 		switch ( (JPH::BroadPhaseLayer::Type)inLayer )
 		{
-		case (JPH::BroadPhaseLayer::Type)BroadPhaseLayers::NON_MOVING:	return "NON_MOVING";
-		case (JPH::BroadPhaseLayer::Type)BroadPhaseLayers::MOVING:		return "MOVING";
-		default:														VJoltAssert( false ); return "INVALID";
+		case (JPH::BroadPhaseLayer::Type)BroadPhaseLayers::NON_MOVING_WORLD:	return "NON_MOVING_WORLD";
+		case (JPH::BroadPhaseLayer::Type)BroadPhaseLayers::NON_MOVING_OBJECT:	return "NON_MOVING_OBJECT";
+		case (JPH::BroadPhaseLayer::Type)BroadPhaseLayers::NO_COLLIDE:			return "NO_COLLIDE";
+		case (JPH::BroadPhaseLayer::Type)BroadPhaseLayers::DEBRIS:				return "DEBRIS";
+		case (JPH::BroadPhaseLayer::Type)BroadPhaseLayers::MOVING:				return "MOVING";
+		default:																VJoltAssert( false ); return "INVALID";
 		}
 	}
 #endif
