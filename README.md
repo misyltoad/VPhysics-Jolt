@@ -2,7 +2,7 @@
 
 ## What is Volt? ⚡
 
-Volt (VPhysics Jolt) is a replacement for Source's VPhysics which uses IVP/Havok<br>
+Volt (VPhysics Jolt) is a replacement for Source's VPhysics which uses IVP/Havok using [Jolt Physics](https://github.com/jrouwe/JoltPhysics/)<br>
 Created by [Joshua Ashton (🐸✨)](https://github.com/Joshua-Ashton) [@phys_ballsocket](https://twitter.com/phys_ballsocket) and [Josh Dowell (Slartibarty)](https://github.com/Slartibarty) [@Slartbarty](https://twitter.com/Slartbarty).
 
 Volt is designed to be incredibly high performance, supporting thousands of objects at once without bringing tick/framerate down to a crawl.
