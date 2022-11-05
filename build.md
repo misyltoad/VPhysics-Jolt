@@ -52,6 +52,10 @@ Common build errors you may run into building on Windows and their solutions.
 
 If there is an error involving a symbol named ` size_t _msize` or `size_t __cdecl _msize_base`, it is most likely because you haven't updated your Windows SDK to the [Windows 11 SDK](https://developer.microsoft.com/en-us/windows/downloads/windows-sdk/). Please do so. If you still get this error make sure that your Visual Studio projects also default to the latest installed version if they don't already.
 
+> #### typeinfo.h
+
+You just have to compile the project in "Release".
+
 ## Linux
 
 Continuing on Linux, there are a few prerequisites to building regardless of distribution.
