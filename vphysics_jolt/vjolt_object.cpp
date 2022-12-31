@@ -396,7 +396,7 @@ float JoltPhysicsObject::GetSphereRadius() const
 		return 0.0f;
 
 	const JPH::SphereShape *pSphereShape = static_cast< const JPH::SphereShape * >( m_pBody->GetShape() );
-	return pSphereShape->GetRadius();
+	return JoltToSource::Distance( pSphereShape->GetRadius() );
 }
 
 void JoltPhysicsObject::SetSphereRadius( float radius )
