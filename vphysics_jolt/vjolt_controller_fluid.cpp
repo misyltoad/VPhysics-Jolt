@@ -108,6 +108,11 @@ void JoltPhysicsFluidController::OnJoltPhysicsObjectDestroyed( JoltPhysicsObject
 
 //-------------------------------------------------------------------------------------------------
 
+static JPH::Vec3 ProjectPoint( const JPH::Plane &plane, JPH::Vec3Arg point )
+{
+	return point - plane.SignedDistance(point) * plane.GetNormal();
+}
+
 // Applies buoyancy to any body that intersects with the water shape
 class SourceFluidCollector : public JPH::CollideShapeCollector
 {
@@ -134,10 +139,6 @@ public:
 
 		m_ObjectsInShape.push_back( pObject );
 
-		// The original VPhysics ignores m_Params.torqueFactor and always has 0.01.
-		// But I think 0.05 looks better.
-		static constexpr float flTorqueFactor = 0.05f;
-
 		// Josh:
 		// The buoyancy ratio in Source works like this:
 		//   fluid_density = m_flDensity * pObject->GetBuoyancyRatio()
@@ -148,7 +149,12 @@ public:
 		const float flFluidDensity = m_flDensity * pObject->GetBuoyancyRatio();
 		float inBuoyancy = flFluidDensity * pObject->GetBody()->GetShape()->GetVolume() * pObject->GetInvMass();
 		if ( body.IsActive() )
-			body.ApplyBuoyancyImpulse( m_Surface, inBuoyancy, 0.3f /* m_Params.damping */, flTorqueFactor, SourceToJolt::Distance( m_Params.currentVelocity ), m_pPhysicsSystem->GetGravity(), m_DeltaTime);
+		{
+			// Project (0, 0, 0) onto plane to get a point on it.
+			JPH::Vec3 point = ProjectPoint( m_Surface, JPH::Vec3::sZero() );
+			JPH::Vec3 normal = m_Surface.GetNormal();
+			body.ApplyBuoyancyImpulse( point, normal, inBuoyancy, m_Params.damping, 0.1f, SourceToJolt::Distance( m_Params.currentVelocity ), m_pPhysicsSystem->GetGravity(), m_DeltaTime );
+		}
 	}
 
 private:
@@ -193,7 +199,7 @@ void JoltPhysicsFluidController::OnPreSimulate( float deltaTime )
 	const JPH::Shape *pShape = m_pFluidObject->GetCollide()->ToShape();
 
 	m_pPhysicsSystem->GetNarrowPhaseQueryNoLock().CollideShape(
-		pShape, JPH::Vec3::sReplicate( 1.0f ), queryTransform, collideSettings, collector,
+		pShape, JPH::Vec3::sReplicate( 1.0f ), queryTransform, collideSettings, JPH::Vec3::sZero(), collector,
 		JPH::SpecifiedBroadPhaseLayerFilter( BroadPhaseLayers::MOVING ), JPH::SpecifiedObjectLayerFilter( Layers::MOVING ), body_filter );
 
 	for ( JoltPhysicsObject *pObject : m_ObjectsInShape )

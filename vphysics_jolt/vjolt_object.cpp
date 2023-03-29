@@ -979,7 +979,7 @@ void JoltPhysicsObject::RemoveTrigger()
 		const JPH::Shape *pShape = GetCollide()->ToShape();
 
 		m_pPhysicsSystem->GetNarrowPhaseQueryNoLock().CollideShape(
-			pShape, JPH::Vec3::sReplicate( 1.0f ), queryTransform, collideSettings, collector,
+			pShape, JPH::Vec3::sReplicate( 1.0f ), queryTransform, collideSettings, JPH::Vec3::sZero(), collector,
 			JPH::SpecifiedBroadPhaseLayerFilter( BroadPhaseLayers::MOVING ), JPH::SpecifiedObjectLayerFilter( Layers::MOVING ), body_filter );
 	}
 

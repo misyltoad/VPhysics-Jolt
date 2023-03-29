@@ -40,7 +40,7 @@ public:
 	{
 	}
 
-	JPH::ValidateResult OnContactValidate( const JPH::Body &inBody1, const JPH::Body &inBody2, const JPH::CollideShapeResult &inCollisionResult ) override
+	JPH::ValidateResult OnContactValidate( const JPH::Body &inBody1, const JPH::Body &inBody2, JPH::Vec3Arg inBaseOffset, const JPH::CollideShapeResult &inCollisionResult ) override
 	{
 		return JPH::ValidateResult::AcceptAllContactsForThisBodyPair;
 	}
@@ -414,7 +414,7 @@ private:
 			: m_CollisionPair{ pObject1, pObject2 }
 			// Slart: Note this negated vector, it is important, Portal 2 bouncy paint needs it negated otherwise things fly into the surface they hit
 			, m_SurfaceNormal( -Vector( inManifold.mWorldSpaceNormal.GetX(), inManifold.mWorldSpaceNormal.GetY(), inManifold.mWorldSpaceNormal.GetZ() ) )
-			, m_ContactPoint( JoltToSource::Distance( inManifold.mWorldSpaceContactPointsOn1[0] ) )
+			, m_ContactPoint( JoltToSource::Distance( inManifold.GetWorldSpaceContactPointOn1( 0 ) ) )
 			// Unused...
 			, m_ContactSpeed( vec3_origin )
 			, m_Velocity0( pObject1->GetBody()->GetLinearVelocity() )

@@ -182,7 +182,7 @@ static void CheckCollision( JoltPhysicsObject *pObject, JPH::CollideShapeCollect
 	settings.mBackFaceMode = JPH::EBackFaceMode::IgnoreBackFaces;
 	settings.mMaxSeparationDistance = vjolt_player_collision_tolerance.GetFloat();
 
-	pSystem->GetNarrowPhaseQueryNoLock().CollideShape( pObject->GetBody()->GetShape(), JPH::Vec3::sReplicate( 1.0f ), query_transform, settings, ioCollector, broadphase_layer_filter, object_layer_filter, ioFilter );
+	pSystem->GetNarrowPhaseQueryNoLock().CollideShape( pObject->GetBody()->GetShape(), JPH::Vec3::sReplicate( 1.0f ), query_transform, settings, JPH::Vec3::sZero(), ioCollector, broadphase_layer_filter, object_layer_filter, ioFilter );
 }
 
 // Slart: This is a version of CheckCollision that projects the player by their velocity, to attempt to push objects that we'll walk into soon
