@@ -257,6 +257,48 @@ private:
 	JoltPhysicsObject	*m_pSelfObject;
 };
 
+class NormalWeightedCollector : public JPH::CollideShapeCollector
+{
+public:
+	NormalWeightedCollector( JPH::PhysicsSystem *pPhysicsSystem )
+		: m_pPhysicsSystem( pPhysicsSystem )
+	{
+	}
+
+	void Reset() override
+	{
+		JPH::CollideShapeCollector::Reset();
+
+		m_bHadHit = false;
+		m_flLowestNormalZ = 1.0f;
+	}
+
+	void AddHit( const JPH::CollideShapeResult &inResult ) override
+	{
+		JPH::BodyLockRead lock( m_pPhysicsSystem->GetBodyLockInterfaceNoLock(), inResult.mBodyID2 );
+		const JPH::Body &body = lock.GetBody();
+
+		JPH::Vec3 normal = body.GetWorldSpaceSurfaceNormal( inResult.mSubShapeID2, inResult.mContactPointOn2 );
+		m_flLowestNormalZ = Min( m_flLowestNormalZ, -normal.GetZ() );
+
+		m_Hit = inResult;
+		m_bHadHit = true;
+	}
+
+	inline bool HadHit() const
+	{
+		return m_bHadHit;
+	}
+
+	float m_flLowestNormalZ = 1.0f;
+
+	JPH::CollideShapeCollector::ResultType m_Hit;
+
+private:
+	JPH::PhysicsSystem		*m_pPhysicsSystem;
+	bool					m_bHadHit = false;
+};
+
 uint32 JoltPhysicsPlayerController::GetContactState( uint16 nGameFlags )
 {
 	// This does not seem to affect much, we should aspire to have our physics be as 1:1 to brush collisions as possible anyway
@@ -273,6 +315,13 @@ uint32 JoltPhysicsPlayerController::GetContactState( uint16 nGameFlags )
 			, m_pPlayerObject( pPlayerObject )
 			, m_nGameFlags( nGameFlags )
 		{
+		}
+
+		void Reset() override
+		{
+			JPH::CollideShapeCollector::Reset();
+
+			m_nFlagsOut = 0;
 		}
 
 		void AddHit( const JPH::CollideShapeResult &inResult ) override
@@ -351,13 +400,14 @@ void JoltPhysicsPlayerController::OnPreSimulate( float flDeltaTime )
 	JPH::BodyInterface &bodyInterface = pPhysicsSystem->GetBodyInterfaceNoLock();
 
 	// Project ourselves towards our velocity
-	JPH::AnyHitCollisionCollector<JPH::CollideShapeCollector> collector;
+	NormalWeightedCollector collector( pPhysicsSystem );
 	SourceHitFilter<true> filter( pPhysicsSystem, m_pObject );
 	CheckCollision( m_pObject, collector, filter );
 	
-	if ( collector.HadHit() )
+	// Source typically uses -0.7 for ground.
+	if ( collector.HadHit() && collector.m_flLowestNormalZ < -0.7f )
 	{
-		JPH::BodyID otherID = collector.mHit.mBodyID2;
+		JPH::BodyID otherID = collector.m_Hit.mBodyID2;
 
 		//bodyInterface.AddImpulse( otherID, m_pObject->GetMass() * m_targetVelocity * flDeltaTime, m_pObject->GetBody()->GetPosition() );
 		bodyInterface.AddImpulse( otherID, m_pObject->GetMass() * pPhysicsSystem->GetGravity() * flDeltaTime, m_pObject->GetBody()->GetPosition());
