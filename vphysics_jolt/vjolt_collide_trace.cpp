@@ -176,17 +176,17 @@ public:
 	ContentsFilter_Shape( const JPH::Shape *pShape, uint32 contentsMask, IConvexInfo *pConvexInfo )
 		: m_pShape( pShape ), m_ContentsMask( contentsMask ), m_pConvexInfo( pConvexInfo ) {}
 
-	bool ShouldCollide( const JPH::SubShapeID& inSubShapeID2 ) const override
+	bool ShouldCollide( const JPH::Shape *inShape2, const JPH::SubShapeID& inSubShapeID2 ) const override
 	{
-		const uint32 gameData = static_cast<uint32>( m_pShape->GetSubShapeUserData( inSubShapeID2 ) );
+		const uint32 gameData = static_cast<uint32>( inShape2->GetSubShapeUserData( inSubShapeID2 ) );
 		const uint32 contents = m_pConvexInfo ? m_pConvexInfo->GetContents( gameData ) : CONTENTS_SOLID;
 
 		return !!( contents & m_ContentsMask );
 	}
 
-	bool ShouldCollide( const JPH::SubShapeID &inSubShapeID1, const JPH::SubShapeID &inSubShapeID2 ) const override
+	bool ShouldCollide( const JPH::Shape *inShape1, const JPH::SubShapeID &inSubShapeIDOfShape1, const JPH::Shape *inShape2, const JPH::SubShapeID &inSubShapeIDOfShape2 ) const override
 	{
-		return ShouldCollide( inSubShapeID2 );
+		return ShouldCollide( inShape2, inSubShapeIDOfShape2 );
 	}
 
 public:

@@ -15,7 +15,7 @@ public:
 	// JPH::DebugRenderer + Draw Implementation
 	///////////////////////////////////////////
 
-	void DrawLine( const JPH::Float3 &inFrom, const JPH::Float3 &inTo, JPH::ColorArg inColor ) override;
+	void DrawLine( JPH::Vec3Arg inFrom, JPH::Vec3Arg inTo, JPH::ColorArg inColor ) override;
 
 	void DrawTriangle( JPH::Vec3Arg inV1, JPH::Vec3Arg inV2, JPH::Vec3Arg inV3, JPH::ColorArg inColor ) override;
 

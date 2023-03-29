@@ -45,7 +45,7 @@ JoltPhysicsDebugRenderer::~JoltPhysicsDebugRenderer()
 {
 }
 
-void JoltPhysicsDebugRenderer::DrawLine( const JPH::Float3& inFrom, const JPH::Float3& inTo, JPH::ColorArg inColor )
+void JoltPhysicsDebugRenderer::DrawLine( JPH::Vec3Arg inFrom, JPH::Vec3Arg inTo, JPH::ColorArg inColor )
 {
 	Vector v1 = JoltToSource::Distance( inFrom );
 	Vector v2 = JoltToSource::Distance( inTo );

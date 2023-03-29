@@ -59,40 +59,46 @@ static ConVar vjolt_baumgarte_factor( "vjolt_baumgarte_factor", "0.2", FCVAR_NON
 
 //-------------------------------------------------------------------------------------------------
 
-// Function that determines if two object layers can collide
-static bool JoltObjectCanCollide( JPH::ObjectLayer inObject1, JPH::ObjectLayer inObject2 )
+class JoltObjectLayerPairFilter final : public JPH::ObjectLayerPairFilter
 {
-	switch ( inObject1 )
+public:
+	// Function that determines if two object layers can collide
+	bool ShouldCollide( JPH::ObjectLayer inObject1, JPH::ObjectLayer inObject2 ) const override
 	{
-	// NO_COLLIDE collides with nothing.
-	case Layers::NO_COLLIDE:
-		return	false;
-	// NON_MOVING collides with moving objects and debris.
-	case Layers::NON_MOVING_WORLD:
-	case Layers::NON_MOVING_OBJECT:
-		return	inObject2 == Layers::MOVING ||
-				inObject2 == Layers::DEBRIS;
-	// MOVING collides with moving and non-moving objects.
-	case Layers::MOVING:
-		return	inObject2 == Layers::MOVING ||
-				inObject2 == Layers::NON_MOVING_WORLD ||
-				inObject2 == Layers::NON_MOVING_OBJECT;
+		switch ( inObject1 )
+		{
+		// NO_COLLIDE collides with nothing.
+		case Layers::NO_COLLIDE:
+			return	false;
+		// NON_MOVING collides with moving objects and debris.
+		case Layers::NON_MOVING_WORLD:
+		case Layers::NON_MOVING_OBJECT:
+			return	inObject2 == Layers::MOVING ||
+					inObject2 == Layers::DEBRIS;
+		// MOVING collides with moving and non-moving objects.
+		case Layers::MOVING:
+			return	inObject2 == Layers::MOVING ||
+					inObject2 == Layers::NON_MOVING_WORLD ||
+					inObject2 == Layers::NON_MOVING_OBJECT;
 	
-	// DEBRIS only collides with non-moving objects.
-	case Layers::DEBRIS:
-		return	inObject2 == Layers::NON_MOVING_WORLD || inObject2 == Layers::NON_MOVING_OBJECT;
-	default:
-		VJoltAssert( false );
-		return false;
+		// DEBRIS only collides with non-moving objects.
+		case Layers::DEBRIS:
+			return	inObject2 == Layers::NON_MOVING_WORLD || inObject2 == Layers::NON_MOVING_OBJECT;
+		default:
+			VJoltAssert( false );
+			return false;
 	}
+};
+
+private:
 };
 
 // BroadPhaseLayerInterface implementation
 // This defines a mapping between object and broadphase layers.
-class JoltBPLayerInterfaceImpl final : public JPH::BroadPhaseLayerInterface
+class JoltBroadPhaseLayerInterface final : public JPH::BroadPhaseLayerInterface
 {
 public:
-	JoltBPLayerInterfaceImpl()
+	JoltBroadPhaseLayerInterface()
 	{
 		// Create a mapping table from object to broad phase layer
 		mObjectToBroadPhase[Layers::NON_MOVING_WORLD] = BroadPhaseLayers::NON_MOVING_WORLD;
@@ -132,33 +138,41 @@ private:
 	JPH::BroadPhaseLayer mObjectToBroadPhase[Layers::NUM_LAYERS];
 };
 
-// Function that determines if two broadphase layers can collide
-static bool JoltBroadPhaseCanCollide( JPH::ObjectLayer inLayer1, JPH::BroadPhaseLayer inLayer2 )
+class JoltObjectVsBroadPhaseLayerFilter final : public JPH::ObjectVsBroadPhaseLayerFilter
 {
-	switch (inLayer1)
+public:
+	// Function that determines if two broadphase layers can collide
+	bool ShouldCollide( JPH::ObjectLayer inLayer1, JPH::BroadPhaseLayer inLayer2 ) const override
 	{
-	// NO_COLLIDE collides with nothing.
-	case Layers::NO_COLLIDE:
-		return	false;
-	// NON_MOVING collides with moving objects and debris.
-	case Layers::NON_MOVING_WORLD:
-	case Layers::NON_MOVING_OBJECT:
-		return	inLayer2 == BroadPhaseLayers::MOVING ||
-				inLayer2 == BroadPhaseLayers::DEBRIS;
-	// MOVING collides with moving and non-moving objects.
-	case Layers::MOVING:
-		return	inLayer2 == BroadPhaseLayers::MOVING ||
-				inLayer2 == BroadPhaseLayers::NON_MOVING_WORLD ||
-				inLayer2 == BroadPhaseLayers::NON_MOVING_OBJECT;
+		switch (inLayer1)
+		{
+		// NO_COLLIDE collides with nothing.
+		case Layers::NO_COLLIDE:
+			return false;
+
+		// NON_MOVING collides with moving objects and debris.
+		case Layers::NON_MOVING_WORLD:
+		case Layers::NON_MOVING_OBJECT:
+			return inLayer2 == BroadPhaseLayers::MOVING ||
+				   inLayer2 == BroadPhaseLayers::DEBRIS;
+
+		// MOVING collides with moving and non-moving objects.
+		case Layers::MOVING:
+			return inLayer2 == BroadPhaseLayers::MOVING ||
+				   inLayer2 == BroadPhaseLayers::NON_MOVING_WORLD ||
+				   inLayer2 == BroadPhaseLayers::NON_MOVING_OBJECT;
 	
-	// DEBRIS only collides with non-moving objects.
-	case Layers::DEBRIS:
-		return	inLayer2 == BroadPhaseLayers::NON_MOVING_WORLD || inLayer2 == BroadPhaseLayers::NON_MOVING_OBJECT;
-	default:
-		VJoltAssert( false );
-		return false;
+		// DEBRIS only collides with non-moving objects.
+		case Layers::DEBRIS:
+			return inLayer2 == BroadPhaseLayers::NON_MOVING_WORLD || inLayer2 == BroadPhaseLayers::NON_MOVING_OBJECT;
+
+		default:
+			VJoltAssert( false );
+			return false;
+		}
 	}
-}
+private:
+};
 
 //-------------------------------------------------------------------------------------------------
 
@@ -180,7 +194,9 @@ CON_COMMAND( vjolt_environment_dump_server, "Dumps the next simulated environmen
 
 //-------------------------------------------------------------------------------------------------
 
-JoltBPLayerInterfaceImpl JoltPhysicsEnvironment::s_BPLayerInterface;
+JoltBroadPhaseLayerInterface JoltPhysicsEnvironment::s_BroadPhaseLayerInterface;
+JoltObjectVsBroadPhaseLayerFilter JoltPhysicsEnvironment::s_BroadPhaseFilter;
+JoltObjectLayerPairFilter JoltPhysicsEnvironment::s_LayerPairFilter;
 
 JoltPhysicsEnvironment::JoltPhysicsEnvironment()
 	: m_ContactListener( m_PhysicsSystem )
@@ -189,7 +205,7 @@ JoltPhysicsEnvironment::JoltPhysicsEnvironment()
 
 	m_PhysicsSystem.Init(
 		kMaxBodies, kNumBodyMutexes, kMaxBodyPairs, kMaxContactConstraints,
-		s_BPLayerInterface, JoltBroadPhaseCanCollide, JoltObjectCanCollide );
+		s_BroadPhaseLayerInterface, s_BroadPhaseFilter, s_LayerPairFilter);
 
 	{
 		JPH::PhysicsSettings settings = m_PhysicsSystem.GetPhysicsSettings();

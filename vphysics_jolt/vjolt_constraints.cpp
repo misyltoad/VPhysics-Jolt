@@ -478,7 +478,7 @@ void JoltPhysicsConstraint::InitialiseSliding( IPhysicsConstraintGroup *pGroup, 
 	JPH::Body *attBody = m_pObjAttached->GetBody();
 
 	JPH::SliderConstraintSettings settings;
-	settings.SetPoint( *refBody, *attBody );
+	settings.mAutoDetectPoint = true;
 	settings.SetSliderAxis( JPH::Vec3( sliding.slideAxisRef.x, sliding.slideAxisRef.y, sliding.slideAxisRef.z ) );
 
 	if ( sliding.limitMin != sliding.limitMax )
@@ -540,7 +540,7 @@ void JoltPhysicsConstraint::InitialiseFixed( IPhysicsConstraintGroup *pGroup, co
 	JPH::Body *attBody = m_pObjAttached->GetBody();
 
 	JPH::FixedConstraintSettings settings;
-	settings.SetPoint( *refBody, *attBody );
+	settings.mAutoDetectPoint = true;
 
 	m_pConstraint = settings.Create( *refBody, *attBody );
 

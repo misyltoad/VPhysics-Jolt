@@ -11,7 +11,9 @@
 #include "vjolt_constraints.h"
 #include "vjolt_listener_contact.h"
 
-class JoltBPLayerInterfaceImpl;
+class JoltBroadPhaseLayerInterface;
+class JoltObjectVsBroadPhaseLayerFilter;
+class JoltObjectLayerPairFilter;
 
 // StateRecorder implementation that saves to a fixed buffer
 class VJoltStateRecorder final : public JPH::StateRecorder, public CUtlBuffer
@@ -188,7 +190,9 @@ private:
 	float m_flStepTime = 1.0f / 60.0f;
 	float m_flAirDensity = 2.0f;
 
-	static JoltBPLayerInterfaceImpl s_BPLayerInterface;
+	static JoltBroadPhaseLayerInterface s_BroadPhaseLayerInterface;
+	static JoltObjectVsBroadPhaseLayerFilter s_BroadPhaseFilter;
+	static JoltObjectLayerPairFilter s_LayerPairFilter;
 
 	// For GetObjectList
 	mutable JPH::BodyIDVector m_CachedBodies;
