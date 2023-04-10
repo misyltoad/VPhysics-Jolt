@@ -10,6 +10,15 @@
 #define override_not_csgo override
 #endif
 
+// GMod SDK2013 x86 branch
+#if defined( GAME_GMOD )
+#define override_gmod override
+#define override_not_gmod
+#else
+#define override_gmod
+#define override_not_gmod override
+#endif
+
 #if defined( GAME_CSGO ) || defined( GAME_DESOLATION ) || defined( GAME_PORTAL2 )
 #define GAME_PORTAL2_OR_NEWER
 #define override_portal2 override

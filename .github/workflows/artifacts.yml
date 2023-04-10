@@ -7,7 +7,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        source_branch: [sdk2013-sp, sdk2013-mp, asw]
+        source_branch: [sdk2013-sp, sdk2013-mp, asw, gmod]
 
     runs-on: windows-2022
 

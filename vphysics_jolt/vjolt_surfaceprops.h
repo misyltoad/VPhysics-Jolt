@@ -43,6 +43,13 @@ public:
 
 	ISaveRestoreOps		*GetMaterialIndexDataOps() const override_portal2;
 
+	// GMod-specific internal gubbins that was exposed in the public interface.
+	void				*GetIVPMaterial( int nIndex ) override_gmod;
+	int					GetIVPMaterialIndex( const void *pMaterial ) const override_gmod;
+	void				*GetIVPManager( void ) override_gmod;
+	int					RemapIVPMaterialIndex( int nIndex ) const override_gmod;
+	const char 			*GetReservedMaterialName( int nMaterialIndex ) const override_gmod;
+
 public:
 	static JoltPhysicsSurfaceProps& GetInstance() { return s_PhysicsSurfaceProps; }
 

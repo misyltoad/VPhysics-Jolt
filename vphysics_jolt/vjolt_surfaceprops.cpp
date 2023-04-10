@@ -234,6 +234,38 @@ KeyValues *JoltPhysicsSurfaceProps::SurfacePropsToKeyValues( const char *pszBuff
 
 //-------------------------------------------------------------------------------------------------
 
+void *JoltPhysicsSurfaceProps::GetIVPMaterial( int nIndex )
+{
+	Log_Stub( LOG_VJolt );
+	return nullptr;
+}
+
+int JoltPhysicsSurfaceProps::GetIVPMaterialIndex( const void *pMaterial ) const
+{
+	Log_Stub( LOG_VJolt );
+	return (int)(uintp)( pMaterial );
+}
+
+void *JoltPhysicsSurfaceProps::GetIVPManager( void )
+{
+	Log_Stub( LOG_VJolt );
+	return nullptr;
+}
+
+int JoltPhysicsSurfaceProps::RemapIVPMaterialIndex( int nIndex ) const
+{
+	Log_Stub( LOG_VJolt );
+	return nIndex;
+}
+
+const char *JoltPhysicsSurfaceProps::GetReservedMaterialName( int nMaterialIndex ) const
+{
+	Log_Stub( LOG_VJolt );
+	return "default";
+}
+
+//-------------------------------------------------------------------------------------------------
+
 JoltPhysicsMaterialIndexSaveOps JoltPhysicsMaterialIndexSaveOps::s_Instance;
 
 void JoltPhysicsMaterialIndexSaveOps::Save( const SaveRestoreFieldInfo_t &fieldInfo, ISave *pSave )
