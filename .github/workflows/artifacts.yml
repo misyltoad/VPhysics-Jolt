@@ -53,7 +53,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        source_branch: [sdk2013-sp, sdk2013-mp]
+        source_branch: [sdk2013-sp, sdk2013-mp, gmod]
 
     runs-on: ubuntu-latest
     container: debian:bullseye
