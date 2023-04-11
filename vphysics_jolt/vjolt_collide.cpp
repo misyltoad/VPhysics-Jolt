@@ -535,7 +535,20 @@ namespace ivp_compat
 		settings.mHullTolerance = 0.0f;
 		JPH::ConvexShape *pConvexShape = ShapeSettingsToShape< JPH::ConvexShape >( settings );
 		if ( !pConvexShape )
-			return nullptr;
+		{
+			// Wow that sucks, just mock up a small sphere to subsitute.
+			// This can happen for models with extremely broken collision hulls.
+			// If we don't do this, we'll crash later on because older versions of Source are missing
+			// an important nullptr check.
+			// A better solution would be to generate a valid convex hull from the points provided.
+			JPH::SphereShapeSettings sphereSettings( 1.0f );
+			pConvexShape = ShapeSettingsToShape< JPH::ConvexShape >( sphereSettings );
+			if ( !pConvexShape )
+			{
+				// This should never fail, but catching anyway
+				return nullptr;
+			}
+		}
 		
 		pConvexShape->SetUserData( pLedge->client_data );
 		return pConvexShape;
