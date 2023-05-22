@@ -82,6 +82,7 @@ jobs:
         chmod +x createjoltprojects.sh
         chmod +x devtools/bin/vpc_linux
         chmod +x devtools/bin/vpc
+        chmod +x devtools/gendbg.sh
         ./createjoltprojects.sh 
         make -f jolt.mak -j $(nproc)
 
