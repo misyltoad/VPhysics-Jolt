@@ -420,17 +420,11 @@ void JoltPhysicsVehicleController::CreateWheel( JPH::VehicleConstraintSettings &
 	wheelSettings->mInertia				= 0.5f * axle.wheels.mass * ( wheelSettings->mRadius * wheelSettings->mRadius );
 	wheelSettings->mSuspensionMinLength = 0;
 	wheelSettings->mSuspensionMaxLength = additionalLength;
-	wheelSettings->mSuspensionSpring.mMode = JPH::ESpringMode::FrequencyAndDamping;
-	// Josh:
-	// so to go from K (Spring Constant) -> freq we do
-	// sqrtf( K / Mass ) / ( 2.0f * PI )
-	// but it seems like it already has mass divided in Source so...
-	// sqrtf( K ) / ( 2.0f * PI )
-	// Josh: I don't know why but it looks and feels really wrong without this:
-	// TODO(Josh): Investigate more later, doesn't make much sense.
-	// May be related to mass of wheel or something.
-	wheelSettings->mSuspensionSpring.mFrequency = sqrtf( axle.suspension.springConstant ) / ( 2.0f * M_PI_F ) * M_PI_F;
-	wheelSettings->mSuspensionSpring.mDamping = axle.suspension.springDamping;
+	wheelSettings->mSuspensionSpring.mMode = JPH::ESpringMode::StiffnessAndDamping;
+	// Source has these divided by the mass of the vehicle for some reason.
+	// Convert these to a stiffness of k, in N/m...
+	wheelSettings->mSuspensionSpring.mStiffness = axle.suspension.springConstant * m_pCarBodyObject->GetMass();
+	wheelSettings->mSuspensionSpring.mDamping = axle.suspension.springDamping * m_pCarBodyObject->GetMass();
 	if ( axle.wheels.frictionScale )
 	{
 		wheelSettings->mLateralFriction.AddPoint( 1.0f, axle.wheels.frictionScale );
