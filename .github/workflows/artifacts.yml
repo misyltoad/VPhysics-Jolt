@@ -79,7 +79,11 @@ jobs:
     - name: Build GCC x86
       working-directory: ${{ matrix.source_branch }}/src
       run: |
-        ./createjoltprojects.sh
+        chmod +x createjoltprojects.sh
+        chmod +x devtools/bin/vpc_linux
+        chmod +x devtools/bin/vpc
+        chmod +x devtools/gendbg.sh
+        ./createjoltprojects.sh 
         make -f jolt.mak -j $(nproc)
 
     - name: Upload artifacts
