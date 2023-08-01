@@ -6,7 +6,9 @@
 
 $Macro PROJNAME				"vphysics_jolt_sse42"
 
-$Conditional VOLT_SSE42		"1"
+$Conditional VOLT_SSE2      "0"
+$Conditional VOLT_SSE42     "1"
+$Conditional VOLT_AVX2		"0"
 $Macro VOLTARCH				"SSE42"
 
 $Include "vphysics_jolt_inc.vpc"
