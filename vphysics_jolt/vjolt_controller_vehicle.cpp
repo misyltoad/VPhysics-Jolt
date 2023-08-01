@@ -408,7 +408,10 @@ void JoltPhysicsVehicleController::CreateWheel( JPH::VehicleConstraintSettings &
 
 	JPH::WheelSettingsWV *wheelSettings = new JPH::WheelSettingsWV;
 	wheelSettings->mPosition			= SourceToJolt::Distance( wheelPositionLocal );
-	wheelSettings->mDirection			= JPH::Vec3( 0, 0, -1 );
+	wheelSettings->mSuspensionDirection = JPH::Vec3( 0, 0, -1 );
+	wheelSettings->mSteeringAxis		= JPH::Vec3( 0, 0, 1 );
+	wheelSettings->mWheelUp				= JPH::Vec3( 0, 0, 1 );
+	wheelSettings->mWheelForward		= JPH::Vec3( 0, 1, 0 );
 	wheelSettings->mAngularDamping		= axle.wheels.rotdamping;
 	// TODO(Josh): What about more than 4 wheels?
 	wheelSettings->mMaxSteerAngle		= axleIdx == 0 ? steeringAngle : 0.0f;
@@ -417,17 +420,17 @@ void JoltPhysicsVehicleController::CreateWheel( JPH::VehicleConstraintSettings &
 	wheelSettings->mInertia				= 0.5f * axle.wheels.mass * ( wheelSettings->mRadius * wheelSettings->mRadius );
 	wheelSettings->mSuspensionMinLength = 0;
 	wheelSettings->mSuspensionMaxLength = additionalLength;
-	wheelSettings->mSuspensionDamping	= axle.suspension.springDamping;
+	wheelSettings->mSuspensionSpring.mMode = JPH::ESpringMode::FrequencyAndDamping;
 	// Josh:
 	// so to go from K (Spring Constant) -> freq we do
 	// sqrtf( K / Mass ) / ( 2.0f * PI )
 	// but it seems like it already has mass divided in Source so...
 	// sqrtf( K ) / ( 2.0f * PI )
-	wheelSettings->mSuspensionFrequency = sqrtf( axle.suspension.springConstant ) / ( 2.0f * M_PI_F );
 	// Josh: I don't know why but it looks and feels really wrong without this:
 	// TODO(Josh): Investigate more later, doesn't make much sense.
 	// May be related to mass of wheel or something.
-	wheelSettings->mSuspensionFrequency *= M_PI_F;
+	wheelSettings->mSuspensionSpring.mFrequency = sqrtf( axle.suspension.springConstant ) / ( 2.0f * M_PI_F ) * M_PI_F;
+	wheelSettings->mSuspensionSpring.mDamping = axle.suspension.springDamping;
 	if ( axle.wheels.frictionScale )
 	{
 		wheelSettings->mLateralFriction.AddPoint( 1.0f, axle.wheels.frictionScale );

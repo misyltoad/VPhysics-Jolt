@@ -53,7 +53,6 @@ static ConVar vjolt_linearcast( "vjolt_linearcast", "1", FCVAR_NONE, "Whether bo
 static ConVar vjolt_initial_simulation( "vjolt_initial_simulation", "0", FCVAR_NONE, "Whether to pre-settle physics objects on map load." );
 
 static ConVar vjolt_substeps_collision( "vjolt_substeps_collision", "1", FCVAR_NONE, "Number of collision steps to perform.", true, 0.0f, true, 4.0f );
-static ConVar vjolt_substeps_integration( "vjolt_substeps_integration", "1", FCVAR_NONE, "Number of integration substeps to perform.", true, 0.0f, true, 4.0f );
 
 static ConVar vjolt_baumgarte_factor( "vjolt_baumgarte_factor", "0.2", FCVAR_NONE, "Baumgarte stabilization factor (how much of the position error to 'fix' in 1 update). Changing this may help with constraint stability. Requires a map restart to change.", true, 0.0f, true, 1.0f );
 
@@ -479,9 +478,10 @@ JoltPhysicsSpring::JoltPhysicsSpring( JPH::PhysicsSystem *pPhysicsSystem, JoltPh
 	settings.mMinDistance = m_OnlyStretch ? 0.0f : SourceToJolt::Distance( pParams->naturalLength );
 	settings.mMaxDistance = SourceToJolt::Distance( pParams->naturalLength );
 
-	settings.mFrequency = GetSpringFrequency( pParams->constant, m_pObjectStart, m_pObjectEnd );
+	settings.mLimitsSpringSettings.mMode = JPH::ESpringMode::FrequencyAndDamping;
+	settings.mLimitsSpringSettings.mFrequency = GetSpringFrequency( pParams->constant, m_pObjectStart, m_pObjectEnd );
 	// TODO(Josh): The damping values are normally fucking crazy like 5500 from Source... wtf is going on here.
-	settings.mDamping = 0.0f;
+	settings.mLimitsSpringSettings.mDamping = 0.0f;
 
 	m_pConstraint = static_cast< JPH::DistanceConstraint * >( settings.Create( *refBody, *attBody ) );
 	m_pConstraint->SetEnabled( true );
@@ -522,7 +522,8 @@ void JoltPhysicsSpring::SetSpringConstant( float flSpringConstant )
 	m_pObjectStart->Wake();
 	m_pObjectEnd->Wake();
 
-	m_pConstraint->SetFrequency( GetSpringFrequency( flSpringConstant, m_pObjectStart, m_pObjectEnd ) );
+	JPH::SpringSettings& springSettings = m_pConstraint->GetLimitsSpringSettings();
+	springSettings.mFrequency = GetSpringFrequency( flSpringConstant, m_pObjectStart, m_pObjectEnd );
 }
 
 void JoltPhysicsSpring::SetSpringDamping( float flSpringDamping )
@@ -774,7 +775,6 @@ void JoltPhysicsEnvironment::Simulate( float deltaTime )
 	for ( IJoltPhysicsController *pController : m_pPhysicsControllers )
 		pController->OnPreSimulate( deltaTime );
 
-	const int nIntegrationSubSteps = vjolt_substeps_integration.GetInt();
 	const int nCollisionSubSteps = vjolt_substeps_collision.GetInt();
 
 	// If we haven't already, optimize the broadphase, currently this can only happen once per-environment
@@ -793,20 +793,20 @@ void JoltPhysicsEnvironment::Simulate( float deltaTime )
 			int nIterCount = 0;
 			while ( m_PhysicsSystem.GetNumActiveBodies() && nIterCount < MaxInitialIterations )
 			{
-				m_PhysicsSystem.Update( InitialIterationTimescale, 1, InitialSubSteps, tempAllocator, jobSystem );
+				m_PhysicsSystem.Update( InitialIterationTimescale, InitialSubSteps, tempAllocator, jobSystem );
 				nIterCount++;
 			}
 		}
 		else
 		{
 			// Move things around!
-			m_PhysicsSystem.Update( deltaTime, nCollisionSubSteps, nIntegrationSubSteps, tempAllocator, jobSystem );
+			m_PhysicsSystem.Update( deltaTime, nCollisionSubSteps, tempAllocator, jobSystem );
 		}
 	}
 	else
 	{
 		// Move things around!
-		m_PhysicsSystem.Update( deltaTime, nCollisionSubSteps, nIntegrationSubSteps, tempAllocator, jobSystem );
+		m_PhysicsSystem.Update( deltaTime, nCollisionSubSteps, tempAllocator, jobSystem );
 	}
 	m_ContactListener.FlushCallbacks();
 

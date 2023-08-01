@@ -280,7 +280,7 @@ void JoltPhysicsObject::SetMass( float mass )
 		JPH::MassProperties massProperties = m_pBody->GetShape()->GetMassProperties();
 		massProperties.ScaleToMass( mass );
 		massProperties.mInertia( 3, 3 ) = 1.0f;
-		pMotionProperties->SetMassProperties( massProperties );
+		pMotionProperties->SetMassProperties( JPH::EAllowedDOFs::All, massProperties );
 
 		CalculateBuoyancy();
 	}
