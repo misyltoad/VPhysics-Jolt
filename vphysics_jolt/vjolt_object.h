@@ -283,7 +283,3 @@ inline float GetInvEffectiveMass( JoltPhysicsObject *pObject0, JoltPhysicsObject
 	return ( pObject0->IsStatic() ? 0.0f : pObject0->GetInvMass() ) + ( pObject1->IsStatic() ? 0.0f : pObject1->GetInvMass() );
 }
 
-inline float GetSpringFrequency( float flConstant, JoltPhysicsObject *pObject0, JoltPhysicsObject *pObject1 )
-{
-	return sqrt( flConstant * GetInvEffectiveMass( pObject0, pObject1 ) ) / ( 2.0f * M_PI_F );
-}

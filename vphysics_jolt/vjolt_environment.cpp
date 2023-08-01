@@ -478,10 +478,9 @@ JoltPhysicsSpring::JoltPhysicsSpring( JPH::PhysicsSystem *pPhysicsSystem, JoltPh
 	settings.mMinDistance = m_OnlyStretch ? 0.0f : SourceToJolt::Distance( pParams->naturalLength );
 	settings.mMaxDistance = SourceToJolt::Distance( pParams->naturalLength );
 
-	settings.mLimitsSpringSettings.mMode = JPH::ESpringMode::FrequencyAndDamping;
-	settings.mLimitsSpringSettings.mFrequency = GetSpringFrequency( pParams->constant, m_pObjectStart, m_pObjectEnd );
-	// TODO(Josh): The damping values are normally fucking crazy like 5500 from Source... wtf is going on here.
-	settings.mLimitsSpringSettings.mDamping = 0.0f;
+	settings.mLimitsSpringSettings.mMode = JPH::ESpringMode::StiffnessAndDamping;
+	settings.mLimitsSpringSettings.mFrequency = pParams->constant;
+	settings.mLimitsSpringSettings.mDamping = pParams->damping;
 
 	m_pConstraint = static_cast< JPH::DistanceConstraint * >( settings.Create( *refBody, *attBody ) );
 	m_pConstraint->SetEnabled( true );
@@ -523,7 +522,7 @@ void JoltPhysicsSpring::SetSpringConstant( float flSpringConstant )
 	m_pObjectEnd->Wake();
 
 	JPH::SpringSettings& springSettings = m_pConstraint->GetLimitsSpringSettings();
-	springSettings.mFrequency = GetSpringFrequency( flSpringConstant, m_pObjectStart, m_pObjectEnd );
+	springSettings.mStiffness = flSpringConstant;
 }
 
 void JoltPhysicsSpring::SetSpringDamping( float flSpringDamping )
@@ -531,7 +530,8 @@ void JoltPhysicsSpring::SetSpringDamping( float flSpringDamping )
 	m_pObjectStart->Wake();
 	m_pObjectEnd->Wake();
 
-	//m_pConstraint->SetDamping( flSpringDamping );
+	JPH::SpringSettings& springSettings = m_pConstraint->GetLimitsSpringSettings();
+	springSettings.mDamping = flSpringDamping;
 }
 
 void JoltPhysicsSpring::SetSpringLength( float flSpringLength )
