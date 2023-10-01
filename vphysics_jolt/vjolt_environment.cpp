@@ -765,11 +765,11 @@ void JoltPhysicsEnvironment::Simulate( float deltaTime )
 
 	HandleDebugDumpingEnvironment( VJOLT_RETURN_ADDRESS() );
 
-	m_bSimulating = true;
-
 	// Funnily enough, VPhysics calls this BEFORE
 	// doing the simulation...
 	m_ContactListener.PostSimulationFrame();
+
+	m_bSimulating = true;
 
 	// Run pre-simulation controllers
 	for ( IJoltPhysicsController *pController : m_pPhysicsControllers )
@@ -818,8 +818,9 @@ void JoltPhysicsEnvironment::Simulate( float deltaTime )
 
 	// If the delete queue is disabled, we only added to it during the simulation
 	// ie. callbacks etc. So flush that now.
+	// RaphaelIT7: We need to delete all dead objects after simulating everything, or else Jolt freaks out for some reason.
 	if ( !m_bEnableDeleteQueue )
-		DeleteDeadObjects();
+		DeleteDeadObjects(true);
 
 #ifdef JPH_DEBUG_RENDERER
 	JoltPhysicsDebugRenderer::GetInstance().RenderPhysicsSystem( m_PhysicsSystem );
@@ -1430,11 +1431,13 @@ void JoltPhysicsEnvironment::RemoveBodyAndDeleteObject( JoltPhysicsObject *pObje
 	delete pObject;
 }
 
-void JoltPhysicsEnvironment::DeleteDeadObjects()
+void JoltPhysicsEnvironment::DeleteDeadObjects( bool delBodies )
 {
-	for ( JoltPhysicsObject *pObject : m_pDeadObjects )
-		RemoveBodyAndDeleteObject( pObject );
-	m_pDeadObjects.clear();
+	if (delBodies) {
+		for ( JoltPhysicsObject *pObject : m_pDeadObjects )
+			RemoveBodyAndDeleteObject( pObject );
+		m_pDeadObjects.clear();
+	}
 
 	for ( JoltPhysicsConstraint *pConstraint : m_pDeadConstraints )
 		delete pConstraint;
