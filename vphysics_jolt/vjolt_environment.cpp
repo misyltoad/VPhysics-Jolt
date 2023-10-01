@@ -765,11 +765,11 @@ void JoltPhysicsEnvironment::Simulate( float deltaTime )
 
 	HandleDebugDumpingEnvironment( VJOLT_RETURN_ADDRESS() );
 
-	m_bSimulating = true;
-
 	// Funnily enough, VPhysics calls this BEFORE
 	// doing the simulation...
 	m_ContactListener.PostSimulationFrame();
+
+	m_bSimulating = true;
 
 	// Run pre-simulation controllers
 	for ( IJoltPhysicsController *pController : m_pPhysicsControllers )
