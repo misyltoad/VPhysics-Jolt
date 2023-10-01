@@ -38,7 +38,8 @@ static ConVar vjolt_trace_debug_collidebox( "vjolt_trace_debug_collidebox", "0",
 // Slart and I have not been able to determine the root cause of this problem and have tried for a long time...
 //
 // Slart: Portal 2 probably passes in a bad winding order in the polyhedron or something, dunno if it affects Portal 1
-static ConVar vjolt_trace_portal_hack( "vjolt_trace_portal_hack", "0", FCVAR_NONE );
+// RaphaelIT7: We this needs to always be enabled because else the traces the engine uses to determent if you can unduck fail.
+// static ConVar vjolt_trace_portal_hack( "vjolt_trace_portal_hack", "0", FCVAR_NONE );
 
 //-------------------------------------------------------------------------------------------------
 //
@@ -492,8 +493,8 @@ static void CastBoxVsShape( const Ray_t &ray, uint32 contentsMask, IConvexInfo *
 	//settings.mBackFaceModeTriangles = JPH::EBackFaceMode::CollideWithBackFaces;
 	// Josh: Had to re-enable CollideWithBackFaces to allow triggers for the Portal Environment to work.
 	// Come back here if we start getting stuck on things again...
-	if ( vjolt_trace_portal_hack.GetBool() )
-		settings.mBackFaceModeConvex = JPH::EBackFaceMode::CollideWithBackFaces;
+	// if ( vjolt_trace_portal_hack.GetBool() )
+	settings.mBackFaceModeConvex = JPH::EBackFaceMode::CollideWithBackFaces;
 	//settings.mCollisionTolerance = kCollisionTolerance;
 	settings.mUseShrunkenShapeAndConvexRadius = true;
 	settings.mReturnDeepestPoint = true;
