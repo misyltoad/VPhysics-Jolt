@@ -239,6 +239,7 @@ private:
 	// remain un-named offset by the vtable to get to this
 	// instead of calling GetGameData().
 	void *m_pGameData = nullptr;
+	const char *m_pName = "NoName";
 
 	uint16 m_gameFlags = 0;
 	uint16 m_gameIndex = 0;
