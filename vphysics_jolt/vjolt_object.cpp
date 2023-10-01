@@ -31,6 +31,7 @@ JoltPhysicsObject::JoltPhysicsObject( JPH::Body *pBody, JoltPhysicsEnvironment *
 	, m_pGameData( pParams->pGameData )
 	, m_materialIndex( Max( nMaterialIndex, 0 ) ) // Sometimes we get passed -1.
 	, m_flVolume( pParams->volume )
+	, m_pName( pParams->pName )
 {
 	// Josh:
 	// Assert that m_pGameData is the first element, some games
@@ -916,8 +917,7 @@ const CPhysCollide *JoltPhysicsObject::GetCollide() const
 
 const char *JoltPhysicsObject::GetName() const
 {
-	// Slart: Jolt used to store debug names in JPH::Body, but it was removed. So now everybody's NoName.
-	return "NoName";
+	return m_pName;
 }
 
 //-------------------------------------------------------------------------------------------------
