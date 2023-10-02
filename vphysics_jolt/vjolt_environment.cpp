@@ -688,7 +688,7 @@ void JoltPhysicsEnvironment::DestroyShadowController( IPhysicsShadowController *
 {
 	JoltPhysicsShadowController *pController = static_cast< JoltPhysicsShadowController * >( pShadowController );
 	Erase( m_pPhysicsControllers, pController );
-	delete pController;
+	//delete pController;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -704,7 +704,7 @@ void JoltPhysicsEnvironment::DestroyPlayerController( IPhysicsPlayerController *
 {
 	JoltPhysicsPlayerController *pController = static_cast< JoltPhysicsPlayerController * >( pPlayerController );
 	Erase( m_pPhysicsControllers, pController );
-	delete pController;
+	//delete pController;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -720,7 +720,7 @@ void JoltPhysicsEnvironment::DestroyMotionController( IPhysicsMotionController *
 {
 	JoltPhysicsMotionController *pJoltController = static_cast< JoltPhysicsMotionController * >( pController );
 	Erase( m_pPhysicsControllers, pJoltController );
-	delete pJoltController;
+	//delete pJoltController;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -738,7 +738,7 @@ void JoltPhysicsEnvironment::DestroyVehicleController( IPhysicsVehicleController
 {
 	JoltPhysicsVehicleController *pJoltController = static_cast<JoltPhysicsVehicleController *>( pVehicleController );
 	Erase( m_pPhysicsControllers, pJoltController );
-	delete pJoltController;
+	//delete pJoltController;
 }
 
 //-------------------------------------------------------------------------------------------------
