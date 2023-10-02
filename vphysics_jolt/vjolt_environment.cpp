@@ -773,7 +773,7 @@ void JoltPhysicsEnvironment::Simulate( float deltaTime )
 
 	// RaphaelIT7: We need to delete all dead objects after m_ContactListener.PostSimulationFrame, or else Jolt freaks out for some reason.
 	// This also needs to be before pController->OnPreSimulate or else we get some crashes.
-	DeleteDeadObjects(true);
+	DeleteDeadObjects( true );
 
 	// Run pre-simulation controllers
 	for ( IJoltPhysicsController *pController : m_pPhysicsControllers )
@@ -824,7 +824,7 @@ void JoltPhysicsEnvironment::Simulate( float deltaTime )
 	// ie. callbacks etc. So flush that now.
 	if ( !m_bEnableDeleteQueue ) {
 		DeleteDeadObjects();
-		DeleteDeadObjects(true); // Also delete all bodies
+		DeleteDeadObjects( true ); // Also delete all bodies
 	}
 
 #ifdef JPH_DEBUG_RENDERER
@@ -1438,7 +1438,7 @@ void JoltPhysicsEnvironment::RemoveBodyAndDeleteObject( JoltPhysicsObject *pObje
 
 void JoltPhysicsEnvironment::DeleteDeadObjects( bool delBodies )
 {
-	if (delBodies) {
+	if ( delBodies ) {
 		for ( JoltPhysicsObject *pObject : m_pDeadObjects )
 			RemoveBodyAndDeleteObject( pObject );
 		m_pDeadObjects.clear();
