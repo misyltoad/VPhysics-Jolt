@@ -40,7 +40,7 @@ JoltPhysicsObject::JoltPhysicsObject( JPH::Body *pBody, JoltPhysicsEnvironment *
 	static_assert( offsetof( JoltPhysicsObject, m_pGameData ) == sizeof( void * ) );
 
 	// Set the body's userdata as ourselves
-	pBody->SetUserData( reinterpret_cast<uint64>( this ) );
+	pBody->SetUserData( static_cast<uint64>( reinterpret_cast<uintptr_t>(this) ) );
 	if ( !m_pBody->IsStatic() )
 	{
 		JPH::MotionProperties* pMotionProperties = m_pBody->GetMotionProperties();
@@ -1178,7 +1178,7 @@ void JoltPhysicsObject::RestoreObjectState( JPH::StateRecorder &recorder )
 	m_pBody->RestoreState( recorder );
 
 	// Set the body's userdata as ourselves
-	m_pBody->SetUserData( reinterpret_cast<uint64>( this ) );
+	m_pBody->SetUserData( static_cast<uint64>( reinterpret_cast<uintptr_t>(this) ) );
 
 	// Josh: Do not read m_pGameData, as this is not serialized.
 	//recorder.Read( m_pGameData );
