@@ -320,11 +320,12 @@ void JoltPhysicsVehicleController::OnPostSimulate( float flDeltaTime )
 		// what to do about that?..
 		// We just want the local rotation, and this seems to work (?)
 		QAngle newQuat = JoltToSource::Angle( wheelTransform.GetQuaternion() );
-		m_Wheels[ w ].pObject->EnableCollisions( false );
+		JoltPhysicsObject* object = m_Wheels[w].pObject;
+		object->EnableCollisions( false );
 		// Set dummy wheel object pos/angles so the game code can update pose positions for wheels.
-		m_Wheels[ w ].pObject->SetPosition( newPos, newQuat, true );
+		object->SetPosition( newPos, newQuat, true );
 		// Wake it up so that the game bothers to do pose positions.
-		m_Wheels[ w ].pObject->Wake();
+		object->Wake();
 
 		if ( m_VehicleConstraint->GetWheels()[w]->HasContact() )
 			m_OperatingParams.wheelsInContact++;
