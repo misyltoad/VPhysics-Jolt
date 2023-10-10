@@ -149,8 +149,8 @@ void JoltPhysicsCollision::PolysoupDestroy( CPhysPolysoup *pSoup )
 void JoltPhysicsCollision::PolysoupAddTriangle( CPhysPolysoup *pSoup, const Vector &a, const Vector &b, const Vector &c, int materialIndex7bits )
 {
 	// Add both windings to make this two-faced.
-	pSoup->Triangles.push_back( JPH::Triangle( SourceToJolt::DistanceFloat3( c ), SourceToJolt::DistanceFloat3( b ), SourceToJolt::DistanceFloat3( a ) ) );
-	pSoup->Triangles.push_back( JPH::Triangle( SourceToJolt::DistanceFloat3( a ), SourceToJolt::DistanceFloat3( b ), SourceToJolt::DistanceFloat3( c ) ) );
+	pSoup->Triangles.emplace_back( SourceToJolt::DistanceFloat3( c ), SourceToJolt::DistanceFloat3( b ), SourceToJolt::DistanceFloat3( a ) );
+	pSoup->Triangles.emplace_back( SourceToJolt::DistanceFloat3( a ), SourceToJolt::DistanceFloat3( b ), SourceToJolt::DistanceFloat3( c ) );
 }
 
 CPhysCollide *JoltPhysicsCollision::ConvertPolysoupToCollide( CPhysPolysoup *pSoup, bool useMOPP )
