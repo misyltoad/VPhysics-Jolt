@@ -199,7 +199,8 @@ void JoltPhysicsConstraint::SetAngularMotor( float rotSpeed, float maxAngularImp
 			pConstraint->SetTargetAngularVelocity( rotSpeed );
 
 			JPH::MotorSettings &motorSettings = pConstraint->GetMotorSettings();
-			motorSettings.SetForceLimits( -fabsf( maxAngularImpulse ), fabsf( maxAngularImpulse ) );
+			const float angularImpulse = fabsf( maxAngularImpulse );
+			motorSettings.SetForceLimits( -angularImpulse, angularImpulse );
 
 			break;
 		}
