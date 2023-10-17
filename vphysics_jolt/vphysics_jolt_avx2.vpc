@@ -4,11 +4,11 @@
 //	Project Script
 //-----------------------------------------------------------------------------
 
-$Macro PROJNAME				"vphysics_jolt_avx2"
+$Macro PROJNAME "vphysics_jolt_avx2"
 
-$Conditional VOLT_SSE2      "0"
-$Conditional VOLT_SSE42     "0"
-$Conditional VOLT_AVX2		"1"
-$Macro VOLTARCH				"AVX2"
+$Conditional VOLT_SSE2 "0"
+$Conditional VOLT_SSE42 "0"
+$Conditional VOLT_AVX2 "1"
+$Macro VOLTARCH "AVX2"
 
 $Include "vphysics_jolt_inc.vpc"

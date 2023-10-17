@@ -17,7 +17,7 @@ $Configuration
 		// Feature test stuff for the AVX2 build
 		$PreprocessorDefinitions		"$BASE;JPH_USE_SSE4_1;JPH_USE_SSE4_2;JPH_USE_AVX;JPH_USE_AVX2;JPH_USE_LZCNT;JPH_USE_TZCNT;JPH_USE_F16C;JPH_USE_FMADD"	[$VOLT_AVX2]
 		$GCC_ExtraCompilerFlags			"$BASE -msse4.1 -msse4.2 -mavx2 -mlzcnt -mf16c -mfma -mbmi"	[$VOLT_AVX2]
-		$EnableEnhancedInstructionSet	"Advanced Vector Extensions 2 (/arch:AVX2)"					[$VOLT_AVX2]
+		$EnableEnhancedInstructionSet	"Advanced Vector Extensions 2 (/arch:AVX2)"					[$WIN32 && $VOLT_AVX2]
 
 		// Feature test stuff for the SSE 4.2 build
 		$PreprocessorDefinitions		"$BASE;JPH_USE_SSE4_1;JPH_USE_SSE4_2"			[$VOLT_SSE42]
