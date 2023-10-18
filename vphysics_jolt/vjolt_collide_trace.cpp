@@ -38,8 +38,7 @@ static ConVar vjolt_trace_debug_collidebox( "vjolt_trace_debug_collidebox", "0",
 // Slart and I have not been able to determine the root cause of this problem and have tried for a long time...
 //
 // Slart: Portal 2 probably passes in a bad winding order in the polyhedron or something, dunno if it affects Portal 1
-// RaphaelIT7: We this needs to always be enabled because else the traces the engine uses to determent if you can unduck fail.
-// static ConVar vjolt_trace_portal_hack( "vjolt_trace_portal_hack", "0", FCVAR_NONE );
+static ConVar vjolt_trace_portal_hack( "vjolt_trace_portal_hack", "0", FCVAR_NONE );
 
 //-------------------------------------------------------------------------------------------------
 //
@@ -474,7 +473,7 @@ static float CalculateSourceFraction( const Vector &rayDelta, float fraction, co
 //
 // Casts a box against a shape
 //
-static void CastBoxVsShape( const Ray_t &ray, uint32 contentsMask, IConvexInfo *pConvexInfo, const CPhysCollide *pCollide, const Vector &collideOrigin, const QAngle &collideAngles, trace_t *pTrace )
+static void CastBoxVsShape( const Ray_t &ray, uint32 contentsMask, IConvexInfo *pConvexInfo, const CPhysCollide *pCollide, const Vector &collideOrigin, const QAngle &collideAngles, trace_t *pTrace, bool mForceBackFace = false )
 {
 	const JPH::Shape *pShape = pCollide->ToShape();
 
@@ -493,8 +492,8 @@ static void CastBoxVsShape( const Ray_t &ray, uint32 contentsMask, IConvexInfo *
 	//settings.mBackFaceModeTriangles = JPH::EBackFaceMode::CollideWithBackFaces;
 	// Josh: Had to re-enable CollideWithBackFaces to allow triggers for the Portal Environment to work.
 	// Come back here if we start getting stuck on things again...
-	//if ( vjolt_trace_portal_hack.GetBool() )
-	settings.mBackFaceModeConvex = JPH::EBackFaceMode::CollideWithBackFaces;
+	if ( mBackFace || vjolt_trace_portal_hack.GetBool() )
+		settings.mBackFaceModeConvex = JPH::EBackFaceMode::CollideWithBackFaces;
 	//settings.mCollisionTolerance = kCollisionTolerance;
 	settings.mUseShrunkenShapeAndConvexRadius = true;
 	settings.mReturnDeepestPoint = true;
@@ -742,7 +741,8 @@ static void TraceBase( const Ray_t &ray, uint32 contentsMask, IConvexInfo *pConv
 		if ( isCollide )
 		{
 			// TODO(Slart): This should be CollideBoxVsShape, but I can't remember why it wasn't good enough...
-			CastBoxVsShape( ray, contentsMask, pConvexInfo, pCollide, collideOrigin, collideAngles, pTrace );
+			// RaphaelIT7: We need to use JPH::EBackFaceMode::CollideWithBackFaces because else the traces the engine uses to determent if you can unduck fail.
+			CastBoxVsShape( ray, contentsMask, pConvexInfo, pCollide, collideOrigin, collideAngles, pTrace, true );
 		}
 		else
 		{
