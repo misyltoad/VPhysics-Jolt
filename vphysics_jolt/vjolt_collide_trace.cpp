@@ -492,7 +492,7 @@ static void CastBoxVsShape( const Ray_t &ray, uint32 contentsMask, IConvexInfo *
 	//settings.mBackFaceModeTriangles = JPH::EBackFaceMode::CollideWithBackFaces;
 	// Josh: Had to re-enable CollideWithBackFaces to allow triggers for the Portal Environment to work.
 	// Come back here if we start getting stuck on things again...
-	if ( mBackFace || vjolt_trace_portal_hack.GetBool() )
+	if ( mForceBackFace || vjolt_trace_portal_hack.GetBool() )
 		settings.mBackFaceModeConvex = JPH::EBackFaceMode::CollideWithBackFaces;
 	//settings.mCollisionTolerance = kCollisionTolerance;
 	settings.mUseShrunkenShapeAndConvexRadius = true;
