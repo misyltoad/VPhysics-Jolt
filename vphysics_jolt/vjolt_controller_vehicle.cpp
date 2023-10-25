@@ -10,9 +10,9 @@
 
 //------------------------------------------------------------------------------------------------
 
-static ConVar vjolt_vehicle_wheel_debug( "vjolt_vehicle_wheel_debug", "0", FCVAR_CHEAT );
+static JoltConVar vjolt_vehicle_wheel_debug( "vjolt_vehicle_wheel_debug", "0", FCVAR_CHEAT );
 
-static ConVar vjolt_vehicle_throttle_opposition_limit( "vjolt_vehicle_throttle_opposition_limit", "5", FCVAR_NONE,
+static JoltConVar vjolt_vehicle_throttle_opposition_limit( "vjolt_vehicle_throttle_opposition_limit", "5", FCVAR_NONE,
 	"Below what speed should we be attempting to drive/climb with handbrake on to avoid falling down." );
 
 //------------------------------------------------------------------------------------------------

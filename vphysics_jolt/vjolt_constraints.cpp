@@ -16,7 +16,7 @@
 
 //-------------------------------------------------------------------------------------------------
 
-static ConVar vjolt_ragdoll_hinge_optimization( "vjolt_ragdoll_hinge_optimization", "1", FCVAR_REPLICATED,
+static JoltConVar vjolt_ragdoll_hinge_optimization( "vjolt_ragdoll_hinge_optimization", "1", FCVAR_REPLICATED,
 	"Optimizes ragdolls to use hinge constraints for joints with 1 degree of freedom. Additionally fixes legs going back on themselves. Currently breaks ragdolls of NPCs killed in a pose (they inherit the pose).");
 
 //-------------------------------------------------------------------------------------------------

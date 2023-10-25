@@ -10,7 +10,7 @@
 
 //-------------------------------------------------------------------------------------------------
 
-static ConVar vjolt_player_collision_tolerance( "vjolt_player_collision_tolerance", "0.05" );
+static JoltConVar vjolt_player_collision_tolerance( "vjolt_player_collision_tolerance", "0.05" );
 
 //-------------------------------------------------------------------------------------------------
 
