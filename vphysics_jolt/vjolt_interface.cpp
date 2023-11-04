@@ -106,7 +106,10 @@ InitReturnVal_t JoltPhysicsInterface::Init()
 
 void JoltPhysicsInterface::Shutdown()
 {
-	//delete m_pJobSystem;
+#ifdef GAME_GMOD
+	delete m_pJobSystem;
+#endif
+
 	delete m_pTempAllocator;
 	delete JPH::Factory::sInstance;
 
@@ -128,7 +131,9 @@ IPhysicsEnvironment *JoltPhysicsInterface::CreateEnvironment()
 
 void JoltPhysicsInterface::DestroyEnvironment( IPhysicsEnvironment *pEnvironment )
 {
-	//delete static_cast<JoltPhysicsEnvironment *>( pEnvironment );
+#ifdef GAME_GMOD
+	delete static_cast<JoltPhysicsEnvironment *>( pEnvironment );
+#endif
 }
 
 IPhysicsEnvironment *JoltPhysicsInterface::GetActiveEnvironmentByIndex( int index )
