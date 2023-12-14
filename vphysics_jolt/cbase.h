@@ -54,7 +54,7 @@
 #include "mathlib/vector.h"
 
 // Tier1
-#include "vjolt_convar.h" // Also includes tier1/tier1.h
+#include "tier1/tier1.h"
 #include "tier1/strtools.h"
 #include "tier1/interface.h"
 #ifndef GAME_L4D2_OR_NEWER

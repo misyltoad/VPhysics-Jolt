@@ -27,18 +27,18 @@ static constexpr float kCharacterPadding = 0.02f;
 // Also in vjolt_collide.cpp, should unify or just remove entirely
 static constexpr float kMaxConvexRadius = JPH::cDefaultConvexRadius;
 
-static JoltConVar vjolt_trace_debug( "vjolt_trace_debug", "0", FCVAR_CHEAT );
-static JoltConVar vjolt_trace_debug_castray( "vjolt_trace_debug_castray", "0", FCVAR_CHEAT );
-static JoltConVar vjolt_trace_debug_collidepoint( "vjolt_trace_debug_collidepoint", "0", FCVAR_CHEAT );
-static JoltConVar vjolt_trace_debug_castbox( "vjolt_trace_debug_castbox", "0", FCVAR_CHEAT );
-static JoltConVar vjolt_trace_debug_collidebox( "vjolt_trace_debug_collidebox", "0", FCVAR_CHEAT );
+static ConVar vjolt_trace_debug( "vjolt_trace_debug", "0", FCVAR_CHEAT );
+static ConVar vjolt_trace_debug_castray( "vjolt_trace_debug_castray", "0", FCVAR_CHEAT );
+static ConVar vjolt_trace_debug_collidepoint( "vjolt_trace_debug_collidepoint", "0", FCVAR_CHEAT );
+static ConVar vjolt_trace_debug_castbox( "vjolt_trace_debug_castbox", "0", FCVAR_CHEAT );
+static ConVar vjolt_trace_debug_collidebox( "vjolt_trace_debug_collidebox", "0", FCVAR_CHEAT );
 
 // Josh: Enables a hack to make portals work. For some reason when we enable colliding with
 // backfaces, the player gets easily stuck in all sorts of things!
 // Slart and I have not been able to determine the root cause of this problem and have tried for a long time...
 //
 // Slart: Portal 2 probably passes in a bad winding order in the polyhedron or something, dunno if it affects Portal 1
-static JoltConVar vjolt_trace_portal_hack( "vjolt_trace_portal_hack", "0", FCVAR_NONE );
+static ConVar vjolt_trace_portal_hack( "vjolt_trace_portal_hack", "0", FCVAR_NONE );
 
 //-------------------------------------------------------------------------------------------------
 //

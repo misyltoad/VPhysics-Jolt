@@ -49,12 +49,12 @@ static constexpr uint kMaxBodyPairs = kMaxBodies;
 // number then these contacts will be ignored and bodies will start interpenetrating / fall through the world.
 static constexpr uint kMaxContactConstraints = kMaxBodies;
 
-static JoltConVar vjolt_linearcast( "vjolt_linearcast", "1", FCVAR_NONE, "Whether bodies will be created with linear cast motion quality (only takes effect after map restart)." );
-static JoltConVar vjolt_initial_simulation( "vjolt_initial_simulation", "0", FCVAR_NONE, "Whether to pre-settle physics objects on map load." );
+static ConVar vjolt_linearcast( "vjolt_linearcast", "1", FCVAR_NONE, "Whether bodies will be created with linear cast motion quality (only takes effect after map restart)." );
+static ConVar vjolt_initial_simulation( "vjolt_initial_simulation", "0", FCVAR_NONE, "Whether to pre-settle physics objects on map load." );
 
-static JoltConVar vjolt_substeps_collision( "vjolt_substeps_collision", "1", FCVAR_NONE, "Number of collision steps to perform.", true, 0.0f, true, 4.0f );
+static ConVar vjolt_substeps_collision( "vjolt_substeps_collision", "1", FCVAR_NONE, "Number of collision steps to perform.", true, 0.0f, true, 4.0f );
 
-static JoltConVar vjolt_baumgarte_factor( "vjolt_baumgarte_factor", "0.2", FCVAR_NONE, "Baumgarte stabilization factor (how much of the position error to 'fix' in 1 update). Changing this may help with constraint stability. Requires a map restart to change.", true, 0.0f, true, 1.0f );
+static ConVar vjolt_baumgarte_factor( "vjolt_baumgarte_factor", "0.2", FCVAR_NONE, "Baumgarte stabilization factor (how much of the position error to 'fix' in 1 update). Changing this may help with constraint stability. Requires a map restart to change.", true, 0.0f, true, 1.0f );
 
 //-------------------------------------------------------------------------------------------------
 

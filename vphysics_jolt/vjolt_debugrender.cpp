@@ -25,7 +25,7 @@
 #define JOLT_VERTEX_BUFFER_NAME		"Jolt Debug Renderer Vertices"
 #define JOLT_INDEX_BUFFER_NAME		"Jolt Debug Renderer Indices"
 
-static JoltConVar vjolt_debugrender( "vjolt_debugrender", "0", FCVAR_CHEAT );
+static ConVar vjolt_debugrender( "vjolt_debugrender", "0", FCVAR_CHEAT );
 #ifndef VJOLT_USE_PHYSICS_DEBUG_OVERLAY
 static ConVar vjolt_debugrender_picture_in_picture( "vjolt_debugrender_picture_in_picture", "1" );
 static ConVar vjolt_debugrender_clear_rt( "vjolt_debugrender_clear_rt", "1" );
