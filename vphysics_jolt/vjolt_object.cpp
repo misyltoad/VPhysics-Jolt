@@ -1,4 +1,4 @@
-//=================================================================================================
+﻿//=================================================================================================
 //
 // A physics object, implemented as a wrapper over JPH::Body
 // Every tangible object in the game has one of these
@@ -305,8 +305,13 @@ float JoltPhysicsObject::GetInvMass() const
 
 Vector JoltPhysicsObject::GetInertia() const
 {
-	Vector inv = GetInvInertia();
-	return Vector( 1.0f / inv.x, 1.0f / inv.y, 1.0f / inv.z );
+	if ( IsStatic() )
+		return Vector( 1.0f, 1.0f, 1.0f );
+
+	JPH::Vec3 joltInertiaTensor = m_pBody->GetMotionProperties()->GetInverseInertiaDiagonal().Reciprocal();
+	Vector vInertiaTensor = JoltToSource::Distance( joltInertiaTensor );
+	// For some reason, Source abs's in GetInertia/GetInvInertia. Don't ask me why.
+	return VectorAbs( vInertiaTensor );
 }
 
 Vector JoltPhysicsObject::GetInvInertia() const
@@ -314,9 +319,9 @@ Vector JoltPhysicsObject::GetInvInertia() const
 	if ( IsStatic() )
 		return Vector( 1.0f, 1.0f, 1.0f );
 
-	//const JPH::Vec3 inertia = m_pBody->GetMotionProperties()->GetInverseInertiaDiagonal();
-	const JPH::Vec3 inertia = m_pBody->GetInverseInertia() * JPH::Vec3::sReplicate( 1.0f );
-	return Abs( JoltToSource::Unitless( inertia ) );
+	JPH::Vec3 joltInertiaTensor = m_pBody->GetMotionProperties()->GetInverseInertiaDiagonal();
+	Vector vInertiaTensor = JoltToSource::Distance( joltInertiaTensor );
+	return VectorAbs( vInertiaTensor );
 }
 
 void JoltPhysicsObject::SetInertia( const Vector &inertia )
@@ -737,6 +742,7 @@ void JoltPhysicsObject::UpdateShadow( const Vector &targetPosition, const QAngle
 
 int JoltPhysicsObject::GetShadowPosition( Vector *position, QAngle *angles ) const
 {
+#if 0
 	// Josh:
 	// If func_door_rotating, func_tracktrains are moving slowly,
 	// check this function out...
@@ -769,6 +775,10 @@ int JoltPhysicsObject::GetShadowPosition( Vector *position, QAngle *angles ) con
 		*angles = JoltToSource::Angle( newQuat );
 	}
 
+	return 1;
+#endif
+
+	GetPosition( position, angles );
 	return 1;
 }
 
@@ -1286,6 +1296,10 @@ void JoltPhysicsObject::UpdateLayer()
 		layer = Layers::NON_MOVING_OBJECT;
 
 	if ( !bCollisionsEnabled )
+		layer = Layers::NO_COLLIDE;
+
+	// Player Controller becomes a dummy object.
+	if ( m_callbackFlags & CALLBACK_IS_PLAYER_CONTROLLER )
 		layer = Layers::NO_COLLIDE;
 
 	bodyInterface.SetObjectLayer( m_pBody->GetID(), layer );
