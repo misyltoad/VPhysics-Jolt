@@ -13,6 +13,7 @@
 //=================================================================================================
 
 #include "cbase.h"
+#include "coordsize.h"
 
 #include "vjolt_callstack.h"
 #include "vjolt_collide.h"
@@ -53,9 +54,11 @@ static ConVar vjolt_linearcast( "vjolt_linearcast", "1", FCVAR_NONE, "Whether bo
 static ConVar vjolt_enhanced_inactive_edge_detection( "vjolt_enhanced_inactive_edge_detection", "1", FCVAR_NONE, "Whether bodies will be created with enhanced inactive edge detection (only takes effect after map restart)." );
 static ConVar vjolt_initial_simulation( "vjolt_initial_simulation", "0", FCVAR_NONE, "Whether to pre-settle physics objects on map load." );
 
-static ConVar vjolt_substeps_collision_low( "vjolt_substeps_collision_low", "8", FCVAR_NONE, "Number of collision steps to perform in low state.", true, 0.0f, true, 8.0f );
-static ConVar vjolt_substeps_collision_high( "vjolt_substeps_collision_high", "1", FCVAR_NONE, "Number of collision steps to perform in high state.", true, 0.0f, true, 8.0f );
-static ConVar vjolt_substeps_collision_body_count_threshold( "vjolt_substeps_collision_body_count_threshold", "25", FCVAR_NONE, "Number of active bodies needed to go from low -> high substep count.", true, 0.0f, true, 8.0f );
+static ConVar vjolt_substeps( "vjolt_substeps", "1", FCVAR_NONE, "Number of substeps to perform.", true, 0.0f, true, 8.0f );
+
+static ConVar vjolt_velocity_steps( "vjolt_velocity_steps", "10", FCVAR_NONE, "Number of velocity steps to perform.", true, 0.0f, true, 64.0f );
+static ConVar vjolt_position_steps( "vjolt_position_steps", "2", FCVAR_NONE, "Number of velocity steps to perform.", true, 0.0f, true, 64.0f );
+static ConVar vjolt_deterministic( "vjolt_deterministic", "0", FCVAR_NONE, "Whether the simulation is deterministic or not." );
 
 static ConVar vjolt_baumgarte_factor( "vjolt_baumgarte_factor", "0.2", FCVAR_NONE, "Baumgarte stabilization factor (how much of the position error to 'fix' in 1 update). Changing this may help with constraint stability. Requires a map restart to change.", true, 0.0f, true, 1.0f );
 
@@ -208,12 +211,6 @@ JoltPhysicsEnvironment::JoltPhysicsEnvironment()
 	m_PhysicsSystem.Init(
 		kMaxBodies, kNumBodyMutexes, kMaxBodyPairs, kMaxContactConstraints,
 		s_BroadPhaseLayerInterface, s_BroadPhaseFilter, s_LayerPairFilter);
-
-	{
-		JPH::PhysicsSettings settings = m_PhysicsSystem.GetPhysicsSettings();
-		settings.mBaumgarte = vjolt_baumgarte_factor.GetFloat();
-		m_PhysicsSystem.SetPhysicsSettings( settings );
-	}
 
 	// A body activation listener gets notified when bodies activate and go to sleep
 	// Note that this is called from a job so whatever you do here needs to be thread safe.
@@ -769,6 +766,15 @@ void JoltPhysicsEnvironment::Simulate( float deltaTime )
 	if ( deltaTime == 0.0f )
 		return;
 
+	{
+		JPH::PhysicsSettings settings = m_PhysicsSystem.GetPhysicsSettings();
+		settings.mBaumgarte = vjolt_baumgarte_factor.GetFloat(); // 0.2 def
+		settings.mNumVelocitySteps = vjolt_velocity_steps.GetInt();
+		settings.mNumPositionSteps = vjolt_position_steps.GetInt();
+		settings.mDeterministicSimulation = vjolt_deterministic.GetBool();
+		m_PhysicsSystem.SetPhysicsSettings( settings );
+	}
+
 	// Grab our shared assets from the interface
 	JPH::TempAllocator *tempAllocator = JoltPhysicsInterface::GetInstance().GetTempAllocator();
 	JPH::JobSystem *jobSystem = JoltPhysicsInterface::GetInstance().GetJobSystem();
@@ -788,7 +794,7 @@ void JoltPhysicsEnvironment::Simulate( float deltaTime )
 	for ( IJoltPhysicsController *pController : m_pPhysicsControllers )
 		pController->OnPreSimulate( deltaTime );
 
-	const int nCollisionSubSteps = m_PhysicsSystem.GetNumActiveBodies( JPH::EBodyType::RigidBody ) > vjolt_substeps_collision_body_count_threshold.GetInt() ? vjolt_substeps_collision_high.GetInt() : vjolt_substeps_collision_low.GetInt();
+	const int nCollisionSubSteps = vjolt_substeps.GetInt();
 
 	// If we haven't already, optimize the broadphase, currently this can only happen once per-environment
 	if ( !m_bOptimizedBroadPhase )
