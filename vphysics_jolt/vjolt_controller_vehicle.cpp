@@ -15,6 +15,13 @@ static ConVar vjolt_vehicle_wheel_debug( "vjolt_vehicle_wheel_debug", "0", FCVAR
 static ConVar vjolt_vehicle_throttle_opposition_limit( "vjolt_vehicle_throttle_opposition_limit", "5", FCVAR_NONE,
 	"Below what speed should we be attempting to drive/climb with handbrake on to avoid falling down." );
 
+static ConVar vjolt_vehicle_disable_handbrakes( "vjolt_vehicle_disable_handbrakes", "0", FCVAR_NONE );
+
+static ConVar vjolt_vehicle_disable_autobrake( "vjolt_vehicle_disable_autobrake", "0", FCVAR_NONE );
+static ConVar vjolt_vehicle_disable_brake( "vjolt_vehicle_disable_brake", "0", FCVAR_NONE );
+
+static ConVar vjolt_vehicle_throttle_override( "vjolt_vehicle_throttle_override", "-1.0", FCVAR_NONE );
+
 //------------------------------------------------------------------------------------------------
 
 static const JPH::Vec3 VehicleUpVector		= JPH::Vec3( 0, 0, 1 );
@@ -248,21 +255,27 @@ void JoltPhysicsVehicleController::OnPreSimulate( float flDeltaTime )
 	if ( m_ControlParams.steering != 0.0f || m_ControlParams.throttle != 0.0f || m_ControlParams.brake != 0.0f || m_ControlParams.handbrake )
 		bodyInterface.ActivateBody( m_pCarBodyObject->GetBodyID() );
 
-	bool bHandbrake = m_ControlParams.handbrake;
+	bool bHandbrake = m_ControlParams.handbrake && !vjolt_vehicle_disable_handbrakes.GetBool();
 
 	// Don't throttle when holding handbrake (like Source)
 	float flThrottle = bHandbrake ? 0.0f : m_ControlParams.throttle;
+
+	if ( vjolt_vehicle_throttle_override.GetFloat() > 0.0f )
+		flThrottle = vjolt_vehicle_throttle_override.GetFloat();
 	
 	// Apply a little brake without throttle to stop the vehicle from coasting (like Source).
 	const bool bCoasting = flThrottle == 0.0f && m_ControlParams.brake == 0.0f && !bHandbrake;
-	const float flBrake = bCoasting ? 0.1f : m_ControlParams.brake;
+	float flBrake = bCoasting && !vjolt_vehicle_disable_autobrake.GetBool() ? 0.1f : m_ControlParams.brake;
+
+	if ( vjolt_vehicle_disable_brake.GetBool() )
+		flBrake = 0.0f;
 
 	const float ThrottleOpositionSpeed = vjolt_vehicle_throttle_opposition_limit.GetFloat();
 
 	// Enable the handbrake when going at low speeds to avoid slipping when going up hill.
 	if ( ( flThrottle < 0.0f && m_OperatingParams.speed > ThrottleOpositionSpeed ) ||
 		( flThrottle > 0.0f && m_OperatingParams.speed < -ThrottleOpositionSpeed ) )
-		bHandbrake = true;
+		bHandbrake = !vjolt_vehicle_disable_handbrakes.GetBool();
 
 	// Are we boosting?
 	float flTotalTorqueMultiplier = 1.0f;
