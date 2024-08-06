@@ -16,6 +16,9 @@
 
 //-------------------------------------------------------------------------------------------------
 
+static ConVar vjolt_constraint_velocity_substeps( "vjolt_constraint_velocity_substeps", "0" );
+static ConVar vjolt_constraint_position_substeps( "vjolt_constraint_position_substeps", "0" );
+
 static ConVar vjolt_ragdoll_min_torque_friction( "vjolt_ragdoll_min_torque_friction", "0.05" );
 
 //-------------------------------------------------------------------------------------------------
@@ -492,6 +495,8 @@ void JoltPhysicsConstraint::InitialiseBallsocket( IPhysicsConstraintGroup *pGrou
 	JPH::Body *attBody = m_pObjAttached->GetBody();
 
 	JPH::PointConstraintSettings settings;
+	settings.mNumVelocityStepsOverride = vjolt_constraint_velocity_substeps.GetInt();
+	settings.mNumPositionStepsOverride = vjolt_constraint_position_substeps.GetInt();
 	settings.mSpace = JPH::EConstraintSpace::LocalToBodyCOM;
 	settings.mPoint1 = SourceToJolt::Distance( ballsocket.constraintPosition[0] ) - refBody->GetShape()->GetCenterOfMass();
 	settings.mPoint2 = SourceToJolt::Distance( ballsocket.constraintPosition[1] ) - attBody->GetShape()->GetCenterOfMass();
@@ -516,6 +521,8 @@ void JoltPhysicsConstraint::InitialiseFixed( IPhysicsConstraintGroup *pGroup, co
 	JPH::Body *attBody = m_pObjAttached->GetBody();
 
 	JPH::FixedConstraintSettings settings;
+	settings.mNumVelocityStepsOverride = vjolt_constraint_velocity_substeps.GetInt();
+	settings.mNumPositionStepsOverride = vjolt_constraint_position_substeps.GetInt();
 	settings.mAutoDetectPoint = true;
 
 	m_pConstraint = settings.Create( *refBody, *attBody );
@@ -537,6 +544,8 @@ void JoltPhysicsConstraint::InitialiseLength( IPhysicsConstraintGroup *pGroup, c
 	JPH::Body *attBody = m_pObjAttached->GetBody();
 
 	JPH::DistanceConstraintSettings settings;
+	settings.mNumVelocityStepsOverride = vjolt_constraint_velocity_substeps.GetInt();
+	settings.mNumPositionStepsOverride = vjolt_constraint_position_substeps.GetInt();
 	settings.mSpace = JPH::EConstraintSpace::LocalToBodyCOM;
 	settings.mPoint1 = SourceToJolt::Distance( length.objectPosition[0] ) - refBody->GetShape()->GetCenterOfMass();
 	settings.mPoint2 = SourceToJolt::Distance( length.objectPosition[1] ) - attBody->GetShape()->GetCenterOfMass();
