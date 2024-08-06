@@ -15,7 +15,7 @@
 //-------------------------------------------------------------------------------------------------
 
 // Also in vjolt_collide_trace.cpp, should unify or just remove entirely
-static constexpr float kMaxConvexRadius = JPH::cDefaultConvexRadius;
+static constexpr float kMaxConvexRadius = SourceToJolt::Distance( DIST_EPSILON * 2.0f );
 
 JoltPhysicsCollision JoltPhysicsCollision::s_PhysicsCollision;
 EXPOSE_SINGLE_INTERFACE_GLOBALVAR( JoltPhysicsCollision, IPhysicsCollision, VPHYSICS_COLLISION_INTERFACE_VERSION, JoltPhysicsCollision::GetInstance() );

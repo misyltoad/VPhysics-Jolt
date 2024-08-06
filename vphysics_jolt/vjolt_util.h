@@ -188,7 +188,7 @@ namespace SourceToJolt
 
 	// This is used for any unit that has a singular Source Unit(tm) "inch" factor
 	// ie. distance (in), velocity (in/s), acceleration (in/s^2), force (kg in/s^2).
-	loam_expr float			Distance( float value )					{ return value * Factor; }
+	constexpr float			Distance( float value )					{ return value * Factor; }
 	loam_expr JPH::Vec3		Distance( Vector value )				{ return JPH::Vec3( Distance( value[0] ), Distance( value[1] ), Distance( value[2] ) ); } 
 	loam_expr JPH::Float3	DistanceFloat3( Vector value )			{ return JPH::Float3( Distance( value[0] ), Distance( value[1] ), Distance( value[2] ) ); } 
 
