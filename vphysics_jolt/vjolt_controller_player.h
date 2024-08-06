@@ -4,7 +4,7 @@
 #include "vjolt_object.h"
 #include "vjolt_environment.h"
 
-class JoltPhysicsPlayerController : public IPhysicsPlayerController, public IJoltObjectDestroyedListener, public IJoltPhysicsController
+class JoltPhysicsPlayerController : public IPhysicsPlayerController, public IJoltObjectDestroyedListener, public IJoltPhysicsController, public JPH::CharacterContactListener
 {
 public:
 	JoltPhysicsPlayerController( JoltPhysicsObject *pObject );
@@ -38,33 +38,38 @@ public:
 	void OnJoltPhysicsObjectDestroyed( JoltPhysicsObject *pObject ) override;
 	// IJoltPhysicsController
 	void OnPreSimulate( float flDeltaTime ) override;
+	void OnPostSimulate( float flDeltaTime ) override;
+
+	int TryTeleportObject();
+
+	bool OnContactValidate( const JPH::CharacterVirtual* inCharacter, const JPH::BodyID& inBodyID2, const JPH::SubShapeID& inSubShapeID2 );
+	void OnContactAdded( const JPH::CharacterVirtual* inCharacter, const JPH::BodyID& inBodyID2, const JPH::SubShapeID& inSubShapeID2, JPH::RVec3Arg inContactPosition, JPH::Vec3Arg inContactNormal, JPH::CharacterContactSettings& ioSettings );
 
 private:
 	void SetObjectInternal( JoltPhysicsObject *pObject );
-	void SetGround( JoltPhysicsObject *pObject );
 
 private:
+	
+	JPH::Ref<JPH::Character> m_pCharacter;
+	JPH::Ref<JPH::Shape> m_pShape;
+
 	JoltPhysicsObject *m_pObject = nullptr;
+
+	Vector m_vOldPosition = vec3_origin;
+
 	IPhysicsPlayerControllerEvent *m_pHandler = nullptr;
-
-	JoltPhysicsObject *m_pGround = nullptr;
-	JPH::Vec3 m_groundPos = JPH::Vec3::sZero();
-
-	JPH::Vec3 m_targetPosition = JPH::Vec3::sZero();			// Where we want to be
-	JPH::Vec3 m_targetVelocity = JPH::Vec3::sZero();			// How we want to be
-	float m_secondsToArrival = FLT_EPSILON;						// When we want to be
-
-	float m_maxSpeed = 0.0f;
-	float m_maxDampSpeed = 0.0f;
-	float m_maxAngular = 0.0f;
-	float m_maxDampAngular = 0.0f;
-	float m_teleportDistance = 0.0f;
-	bool m_isPhysicallyControlled = false;		// If true we're a bone follower on an NPC or something...
-	bool m_allowTranslation = false;			// Should we translate?
-	bool m_allowRotation = false;				// Should we rotate?
-
-	float m_flPushableMassLimit = 1e4f;
+	float m_flMaxDeltaPosition = 24.0f;
+	float m_flDampFactor = 1.0f;
+	float m_flSecondsToArrival = 0.0f;
 	float m_flPushableSpeedLimit = 1e4f;
+	float m_flPushableMassLimit = VPHYSICS_MAX_MASS;
+	Vector m_vTargetPosition = vec3_origin;
+	Vector m_vMaxSpeed = vec3_origin;
+	Vector m_vCurrentSpeed = vec3_origin;
+	Vector m_vLastImpulse = vec3_origin;
 
-	uint16 m_savedMaterialIndex = 0;
+	bool m_bEnable = false;
+	bool m_bUpdatedSinceLast = false;
+
+
 };
