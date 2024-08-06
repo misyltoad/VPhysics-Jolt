@@ -16,8 +16,16 @@
 
 //-------------------------------------------------------------------------------------------------
 
-static ConVar vjolt_ragdoll_hinge_optimization( "vjolt_ragdoll_hinge_optimization", "1", FCVAR_REPLICATED,
-	"Optimizes ragdolls to use hinge constraints for joints with 1 degree of freedom. Additionally fixes legs going back on themselves. Currently breaks ragdolls of NPCs killed in a pose (they inherit the pose).");
+static ConVar vjolt_ragdoll_min_torque_friction( "vjolt_ragdoll_min_torque_friction", "0.05" );
+
+//-------------------------------------------------------------------------------------------------
+
+static JPH::Vec3 HingePerpendicularVector( JPH::Vec3Arg dir )
+{
+	return fabsf( dir.GetX() ) < 0.57f
+		? JPH::Vec3::sAxisX().Cross( dir ).Normalized()
+		: JPH::Vec3::sAxisY().Cross( dir ).Normalized();
+}
 
 //-------------------------------------------------------------------------------------------------
 
@@ -250,48 +258,79 @@ void JoltPhysicsConstraint::OnJoltPhysicsObjectDestroyed( JoltPhysicsObject *pOb
 // Ragdoll
 //-------------------------------------------------------------------------------------------------
 
-static Vector DOFToAxis( uint32 uDOF )
+static std::optional<MatrixAxisType_t> DOFBitToAxis( uint32 uDOFMask )
 {
-	return Vector(
-		uDOF == 0 ? 1.0f : 0.0f,
-		uDOF == 1 ? 1.0f : 0.0f,
-		uDOF == 2 ? 1.0f : 0.0f );
+	if ( uDOFMask & 0b001 )
+		return X_AXIS;
+	else if ( uDOFMask & 0b010 )
+		return Y_AXIS;
+	else if ( uDOFMask & 0b100 )
+		return Z_AXIS;
+	else
+		return std::nullopt;
 }
 
-static uint32 NextDOF( uint32 uDOF )
+struct RagdollLimits_t
 {
-	return ( uDOF + 1 ) % 3;
-}
-
-static bool IsFixedAxis( const constraint_axislimit_t &axis )
-{
-	return axis.minRotation == axis.maxRotation;
-}
-
-// Returns a bitmask of degrees of freedom for a ragdoll.
-static uint32 GetDegreesOfFreedom( const constraint_ragdollparams_t &ragdoll )
-{
-	uint32 uDOFMask = 0;
-
-	for ( int i = 0; i < 3; i++ )
+	struct Limit_t
 	{
-		if ( !IsFixedAxis( ragdoll.axes[i] ) )
-			uDOFMask |= 1u << i;
+		float Min;
+		float Max;
+
+		float GetRange() const
+		{
+			return Max - Min;
+		}
+	};
+
+	RagdollLimits_t( const constraint_ragdollparams_t &ragdoll )
+	{
+		for ( int i = 0; i < 3; i++ )
+		{
+			if ( ragdoll.useClockwiseRotations )
+			{
+				lAxisLimitsRad[i].Min = DEG2RAD( -ragdoll.axes[i].maxRotation );
+				lAxisLimitsRad[i].Max = DEG2RAD( -ragdoll.axes[i].minRotation );
+			}
+			else
+			{
+				lAxisLimitsRad[i].Min = DEG2RAD( ragdoll.axes[i].minRotation );
+				lAxisLimitsRad[i].Max = DEG2RAD( ragdoll.axes[i].maxRotation );
+			}
+		}
 	}
 
-	return uDOFMask;
-}
+	uint32 GetDegreesOfFreedomMask() const
+	{
+		uint32 uDOFMask = 0;
 
-bool JoltPhysicsConstraint::InitialiseHingeFromRagdoll( IPhysicsConstraintGroup* pGroup, const constraint_ragdollparams_t& ragdoll )
+		for ( int i = 0; i < 3; i++ )
+		{
+			if ( lAxisLimitsRad[i].GetRange() > DEG2RAD( 5.0f ) )
+				uDOFMask |= 1u << i;
+		}
+
+		return uDOFMask;
+	}
+
+	Limit_t lAxisLimitsRad[3]{};
+};
+
+void JoltPhysicsConstraint::InitialiseRagdoll( IPhysicsConstraintGroup *pGroup, const constraint_ragdollparams_t &ragdoll )
 {
-	const uint32 uDOFMask = GetDegreesOfFreedom( ragdoll );
+	SetGroup( pGroup );
+	m_ConstraintType = CONSTRAINT_RAGDOLL;
+
+	JPH::Mat44 constraintToReference = SourceToJolt::Matrix( ragdoll.constraintToReference );
+	JPH::Mat44 constraintToAttached = SourceToJolt::Matrix( ragdoll.constraintToAttached );
+
+	RagdollLimits_t limits = RagdollLimits_t( ragdoll );
+	
+	const uint32 uDOFMask = limits.GetDegreesOfFreedomMask();
 	const uint32 uDOFCount = JPH::CountBits( uDOFMask );
 
-	if ( uDOFCount != 1 )
-		return false;
-
-	const uint32 uDOF = JPH::CountTrailingZeros( uDOFMask );
-	const Vector vecNextDOFAxis = DOFToAxis( NextDOF( uDOF ) );
+	JPH::Body *pRefBody = m_pObjReference->GetBody();
+	JPH::Body *pAttBody = m_pObjAttached->GetBody();
 
 	matrix3x4_t refObjToWorld;
 	m_pObjReference->GetPositionMatrix( &refObjToWorld );
@@ -299,136 +338,73 @@ bool JoltPhysicsConstraint::InitialiseHingeFromRagdoll( IPhysicsConstraintGroup*
 	matrix3x4_t constraintToWorld;
 	ConcatTransforms( refObjToWorld, ragdoll.constraintToReference, constraintToWorld );
 
-	Vector perpAxisDir;
-	VectorIRotate( vecNextDOFAxis, ragdoll.constraintToReference, perpAxisDir );
+	const float flMinTorqueFriction = vjolt_ragdoll_min_torque_friction.GetFloat();
 
-	constraint_limitedhingeparams_t hinge;
-	hinge.Defaults();
-	hinge.constraint					= ragdoll.constraint;
-	hinge.worldPosition					= GetColumn( constraintToWorld, MatrixAxis::Origin );
-	hinge.worldAxisDirection			= GetColumn( constraintToWorld, static_cast< JoltMatrixAxes >( uDOF ) );
-	hinge.referencePerpAxisDirection	= vecNextDOFAxis;
-	hinge.attachedPerpAxisDirection		= Rotate( perpAxisDir, ragdoll.constraintToAttached );
-	hinge.hingeAxis						= ragdoll.axes[ uDOF ];
+	JPH::Constraint *pConstraint = nullptr;
 
-	if ( !ragdoll.useClockwiseRotations )
+	if ( uDOFCount == 0 )
 	{
-		const float minLimit = hinge.hingeAxis.minRotation;
-		const float maxLimit = hinge.hingeAxis.maxRotation;
+		JPH::FixedConstraintSettings settings;
+		settings.mAutoDetectPoint = true;
 
-		hinge.hingeAxis.minRotation = -maxLimit;
-		hinge.hingeAxis.maxRotation = -minLimit;
+		pConstraint = settings.Create( *pRefBody, *pAttBody );
+	}
+	else if ( uDOFCount == 1 )
+	{
+		MatrixAxisType_t eAxis = *DOFBitToAxis( uDOFMask );
+
+		JPH::HingeConstraintSettings settings;
+		settings.mPoint1 = SourceToJolt::Distance( constraintToWorld.GetOrigin() );
+		settings.mPoint2 = SourceToJolt::Distance( constraintToWorld.GetOrigin() );
+		settings.mHingeAxis1 = SourceToJolt::Unitless( constraintToWorld.GetColumn( eAxis ) );
+		settings.mHingeAxis2 = SourceToJolt::Unitless( constraintToWorld.GetColumn( eAxis ) );
+		settings.mNormalAxis1 = HingePerpendicularVector( settings.mHingeAxis1 );
+		settings.mNormalAxis2 = HingePerpendicularVector( settings.mHingeAxis2 );
+		settings.mLimitsMin = limits.lAxisLimitsRad[ eAxis ].Min;
+		settings.mLimitsMax = limits.lAxisLimitsRad[ eAxis ].Max;
+		settings.mMaxFrictionTorque = Max( flMinTorqueFriction, ragdoll.axes[ eAxis ].torque );
+		
+		pConstraint = settings.Create( *pRefBody, *pAttBody );
+	}
+	else
+	{
+		JPH::SwingTwistConstraintSettings settings;
+		// Allow ~1deg either side to avoid joints glitching out.
+		settings.mTwistMinAngle = Min( limits.lAxisLimitsRad[0].Min, DEG2RAD( -1.0f ) );
+		settings.mTwistMaxAngle = Max( limits.lAxisLimitsRad[0].Max, DEG2RAD(  1.0f ) );
+		settings.mNormalHalfConeAngle = Max( 0.5f * ( limits.lAxisLimitsRad[ X_AXIS ].GetRange() ), DEG2RAD( 1.0f ) );
+		settings.mPlaneHalfConeAngle = Max( 0.5f * ( limits.lAxisLimitsRad[ Y_AXIS ].GetRange() ), DEG2RAD( 1.0f ) );
+
+		settings.mSpace = JPH::EConstraintSpace::LocalToBodyCOM;
+
+		settings.mPosition1 = constraintToReference.GetTranslation() - pRefBody->GetShape()->GetCenterOfMass();
+		settings.mTwistAxis1 = constraintToReference.GetAxisX();
+		settings.mPlaneAxis1 = constraintToReference.GetAxisY();
+
+		settings.mPosition2 = constraintToAttached.GetTranslation() - pAttBody->GetShape()->GetCenterOfMass();
+		settings.mTwistAxis2 = constraintToAttached.GetAxisX();
+		settings.mPlaneAxis2 = constraintToAttached.GetAxisY();
+
+		settings.mMaxFrictionTorque = Max( flMinTorqueFriction, ( ragdoll.axes[0].torque + ragdoll.axes[1].torque + ragdoll.axes[2].torque ) / 3.0f );
+
+		pConstraint = settings.Create( *pRefBody, *pAttBody );
 	}
 
-	InitialiseHinge( pGroup, hinge );
-
-	return true;
-}
-
-void JoltPhysicsConstraint::InitialiseRagdoll( IPhysicsConstraintGroup *pGroup, const constraint_ragdollparams_t &ragdoll )
-{
-	// Josh:
-	// Optimize to a hinge constraint if we can -- avoids a bunch of useless computation
-	// and additionally fixes the fact that we can only specify disjoint min/max rotations
-	// on the X axis with Jolt 6DOF
-	// Currently breaks killing NPCs that are in a pose for some reason -- they stay in the pose. Needs investigation.
-	if ( vjolt_ragdoll_hinge_optimization.GetBool() && InitialiseHingeFromRagdoll( pGroup, ragdoll ) )
-		return;
-
-	SetGroup( pGroup );
-	m_ConstraintType = CONSTRAINT_RAGDOLL;
-
-	JPH::Body *refBody = m_pObjReference->GetBody();
-	JPH::Body *attBody = m_pObjAttached->GetBody();
-
-	JPH::Mat44 constraintToReference = SourceToJolt::Matrix( ragdoll.constraintToReference );
-	JPH::Mat44 constraintToAttached = SourceToJolt::Matrix( ragdoll.constraintToAttached );
-
-	JPH::SixDOFConstraintSettings settings;
-	settings.mSpace = JPH::EConstraintSpace::LocalToBodyCOM;
-
-	settings.mPosition1 = constraintToReference.GetTranslation() - refBody->GetShape()->GetCenterOfMass();
-	settings.mAxisX1 = constraintToReference.GetAxisX();
-	settings.mAxisY1 = constraintToReference.GetAxisY();
-
-	settings.mPosition2 = constraintToAttached.GetTranslation() - attBody->GetShape()->GetCenterOfMass();
-	settings.mAxisX2 = constraintToAttached.GetAxisX();
-	settings.mAxisY2 = constraintToAttached.GetAxisY();
-
-
-	for ( int i = 0; i < 3; i++ )
+	if ( ragdoll.onlyAngularLimits )
 	{
-		JPH::SixDOFConstraintSettings::EAxis positionalAxis = static_cast< JPH::SixDOFConstraintSettings::EAxis >(
-			JPH::SixDOFConstraintSettings::EAxis::TranslationX + i );
-
-		JPH::SixDOFConstraintSettings::EAxis rotationalAxis = static_cast< JPH::SixDOFConstraintSettings::EAxis >(
-			JPH::SixDOFConstraintSettings::EAxis::RotationX + i );
-
-		// Make positional axes fixed, unless otherwise stated; the airboat needs them unlocked for a funny hack.
-		if ( !ragdoll.onlyAngularLimits )
-			settings.MakeFixedAxis( positionalAxis );
-
-		if ( ragdoll.axes[i].minRotation == ragdoll.axes[i].maxRotation )
-		{
-			//Log_Msg( LOG_VJolt, "Creating ragdoll-fixed constraint\n" );
-			settings.MakeFixedAxis( rotationalAxis );
-		}
-		else
-		{
-			if ( i == 0 )
-			{
-				//Log_Msg( LOG_VJolt, "Creating X ragdoll constraint with %g min and %g max\n", -ragdoll.axes[i].maxRotation, -ragdoll.axes[i].minRotation );
-				settings.SetLimitedAxis( rotationalAxis, DEG2RAD( ragdoll.axes[i].minRotation ), DEG2RAD( ragdoll.axes[i].maxRotation ) );
-			}
-			else
-			{
-				// Josh:
-				// Jolt uses a Swing Twist for part of this, which means we have to find the max movement allowed
-				// to contrain it by, I think. This results in legs that kind of flop both ways... From the Jolt code
-				// "The swing twist constraint part requires symmetrical rotations around Y and Z"
-				//
-				// This is kind of 'worked around' by the code above that converts 1DOF -> hinges.
-
-				const float maxMovement = Max( fabsf( ragdoll.axes[i].maxRotation ), fabsf( ragdoll.axes[i].minRotation ) );
-				//Log_Msg( LOG_VJolt, "Creating Y/Z ragdoll constraint with %g min and %g max\n", -maxMovement, maxMovement );
-				settings.SetLimitedAxis( rotationalAxis, -DEG2RAD( maxMovement ), DEG2RAD( maxMovement ) );
-			}
-		}
-
-		// Swap the limits if we are using clockwise rotations,
-		// this is only not true if we are saving/loading.
-		if ( ragdoll.useClockwiseRotations )
-		{
-			const float minLimit = settings.mLimitMin[rotationalAxis];
-			const float maxLimit = settings.mLimitMax[rotationalAxis];
-
-			settings.mLimitMin[rotationalAxis] = -maxLimit;
-			settings.mLimitMax[rotationalAxis] = -minLimit;
-		}
-
-		// TODO(Josh): What is .torque on a ragdoll in Source? I want to understand what it is
-		// before setting random values on the Jolt side.
-		//
-		//if ( ragdoll.axes[ i ].torque != 0.0f )
-		//	settings.mMotorSettings[ rotationalAxis ].SetTorqueLimit( ragdoll.axes[ i ].torque );
+		Log_Warning( LOG_VJolt, "Only angular limits. Need a way to disable the linear part of the constraint.\n" );
 	}
 
-	m_pConstraint = settings.Create( *refBody, *attBody );
-	m_pConstraint->SetEnabled( !pGroup && ragdoll.constraint.isActive );
+	const bool bActive = !m_pGroup && ragdoll.constraint.isActive;
 
+	m_pConstraint = pConstraint;
+	m_pConstraint->SetEnabled( bActive );
 	m_pPhysicsSystem->AddConstraint( m_pConstraint );
 }
 
 //-------------------------------------------------------------------------------------------------
 // Hinge
 //-------------------------------------------------------------------------------------------------
-
-static JPH::Vec3 HingePerpendicularVector( JPH::Vec3Arg dir )
-{
-	return fabsf( dir.GetX() ) < 0.57f
-		? JPH::Vec3::sAxisX().Cross( dir ).Normalized()
-		: JPH::Vec3::sAxisY().Cross( dir ).Normalized();
-}
 
 void JoltPhysicsConstraint::InitialiseHinge( IPhysicsConstraintGroup *pGroup, const constraint_hingeparams_t &hinge )
 {
