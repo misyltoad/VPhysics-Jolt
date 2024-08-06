@@ -98,16 +98,31 @@ void JoltPhysicsMotionController::OnPreSimulate( float flDeltaTime )
 		if ( !pObject->IsMoveable() )
 			return;
 
-		Vector vecLocalVelocity = vec3_origin;
-		Vector vecAngularVelocity = vec3_origin;
-		IMotionEvent::simresult_e simResult = m_pMotionEvent->Simulate( this, pObject, flDeltaTime, vecLocalVelocity, vecAngularVelocity );
+		Vector vecVelocity = vec3_origin;
+		Vector vecLocalAngularVelocity = vec3_origin;
+		IMotionEvent::simresult_e simResult = m_pMotionEvent->Simulate( this, pObject, flDeltaTime, vecVelocity, vecLocalAngularVelocity );
 
-		vecLocalVelocity *= flDeltaTime;
-		vecAngularVelocity *= flDeltaTime;
+		vecVelocity *= flDeltaTime;
+		vecLocalAngularVelocity *= flDeltaTime;
 
-		// Convert linear velocity to world space
-		Vector vecWorldLinearVelocity = vec3_origin;
-		pObject->LocalToWorldVector( &vecWorldLinearVelocity, vecLocalVelocity );
+		// GLOBAL/LOCAL refer to the coordinate system of vecVelocity's values.
+		// ACCELERATION/FORCE determine whether or not mass is divided out.
+		// 
+		// vecLocalAngularVelocity from Simulate is always in given local space, regardless.
+		// We must convert it to global space for it to be applied correctly.
+
+		QAngle qObjectAngles;
+		pObject->GetPosition( nullptr, &qObjectAngles );
+
+		// vecLocalAngularVelocity is always local space.
+		Vector vecWorldAngularVelocity;
+		pObject->LocalToWorldVector( &vecWorldAngularVelocity, vecLocalAngularVelocity );
+
+		Vector vecWorldVelocity = vecVelocity;
+		if ( simResult == IMotionEvent::SIM_LOCAL_ACCELERATION || simResult == IMotionEvent::SIM_LOCAL_FORCE )
+		{
+			pObject->LocalToWorldVector( &vecWorldVelocity, vecVelocity );
+		}
 
 		switch ( simResult )
 		{
@@ -116,29 +131,18 @@ void JoltPhysicsMotionController::OnPreSimulate( float flDeltaTime )
 				break;
 			}
 
+			case IMotionEvent::SIM_GLOBAL_ACCELERATION:
 			case IMotionEvent::SIM_LOCAL_ACCELERATION:
 			{
-				pObject->AddVelocity( &vecWorldLinearVelocity, &vecAngularVelocity );
-				break;
-			}
-
-			case IMotionEvent::SIM_LOCAL_FORCE:
-			{
-				pObject->ApplyForceCenter( vecWorldLinearVelocity );
-				pObject->ApplyTorqueCenter( vecAngularVelocity );
-				break;
-			}
-
-			case IMotionEvent::SIM_GLOBAL_ACCELERATION:
-			{
-				pObject->AddVelocity( &vecLocalVelocity, &vecAngularVelocity );
+				pObject->AddVelocity( &vecWorldVelocity, &vecWorldAngularVelocity );
 				break;
 			}
 
 			case IMotionEvent::SIM_GLOBAL_FORCE:
+			case IMotionEvent::SIM_LOCAL_FORCE:
 			{
-				pObject->ApplyForceCenter( vecLocalVelocity );
-				pObject->ApplyTorqueCenter( vecAngularVelocity );
+				pObject->ApplyForceCenter( vecWorldVelocity );
+				pObject->ApplyTorqueCenter( vecWorldAngularVelocity );
 				break;
 			}
 
