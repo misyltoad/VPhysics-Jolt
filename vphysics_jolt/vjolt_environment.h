@@ -187,6 +187,7 @@ private:
 	bool m_bWakeObjectsOnConstraintDeletion = false;
 	bool m_bOptimizedBroadPhase = false;
 	bool m_bUseLinearCast = true;
+	bool m_bUseEnhancedEdgeDetection = true;
 	float m_flStepTime = 1.0f / 60.0f;
 	float m_flAirDensity = 2.0f;
 

@@ -50,9 +50,12 @@ static constexpr uint kMaxBodyPairs = kMaxBodies;
 static constexpr uint kMaxContactConstraints = kMaxBodies;
 
 static ConVar vjolt_linearcast( "vjolt_linearcast", "1", FCVAR_NONE, "Whether bodies will be created with linear cast motion quality (only takes effect after map restart)." );
+static ConVar vjolt_enhanced_inactive_edge_detection( "vjolt_enhanced_inactive_edge_detection", "1", FCVAR_NONE, "Whether bodies will be created with enhanced inactive edge detection (only takes effect after map restart)." );
 static ConVar vjolt_initial_simulation( "vjolt_initial_simulation", "0", FCVAR_NONE, "Whether to pre-settle physics objects on map load." );
 
-static ConVar vjolt_substeps_collision( "vjolt_substeps_collision", "1", FCVAR_NONE, "Number of collision steps to perform.", true, 0.0f, true, 4.0f );
+static ConVar vjolt_substeps_collision_low( "vjolt_substeps_collision_low", "8", FCVAR_NONE, "Number of collision steps to perform in low state.", true, 0.0f, true, 8.0f );
+static ConVar vjolt_substeps_collision_high( "vjolt_substeps_collision_high", "1", FCVAR_NONE, "Number of collision steps to perform in high state.", true, 0.0f, true, 8.0f );
+static ConVar vjolt_substeps_collision_body_count_threshold( "vjolt_substeps_collision_body_count_threshold", "25", FCVAR_NONE, "Number of active bodies needed to go from low -> high substep count.", true, 0.0f, true, 8.0f );
 
 static ConVar vjolt_baumgarte_factor( "vjolt_baumgarte_factor", "0.2", FCVAR_NONE, "Baumgarte stabilization factor (how much of the position error to 'fix' in 1 update). Changing this may help with constraint stability. Requires a map restart to change.", true, 0.0f, true, 1.0f );
 
@@ -237,6 +240,7 @@ JoltPhysicsEnvironment::JoltPhysicsEnvironment()
 
 	// Set our linear cast member
 	m_bUseLinearCast = vjolt_linearcast.GetBool();
+	m_bUseEnhancedEdgeDetection = vjolt_enhanced_inactive_edge_detection.GetBool();
 }
 
 JoltPhysicsEnvironment::~JoltPhysicsEnvironment()
@@ -338,6 +342,9 @@ IPhysicsObject *JoltPhysicsEnvironment::CreatePolyObject( const CPhysCollide *pC
 	if ( m_bUseLinearCast )
 		settings.mMotionQuality = JPH::EMotionQuality::LinearCast;
 
+	if ( m_bUseEnhancedEdgeDetection )
+		settings.mEnhancedInternalEdgeRemoval = true;
+
 	JPH::BodyInterface &bodyInterface = m_PhysicsSystem.GetBodyInterfaceNoLock();
 	JPH::Body *pBody = bodyInterface.CreateBody( settings );
 	bodyInterface.AddBody( pBody->GetID(), JPH::EActivation::DontActivate );
@@ -350,6 +357,12 @@ IPhysicsObject *JoltPhysicsEnvironment::CreatePolyObjectStatic( const CPhysColli
 	objectparams_t params = NormalizeObjectParams( pParams );
 
 	JPH::BodyCreationSettings settings( pCollisionModel->ToShape(), SourceToJolt::Distance( position ), SourceToJolt::Angle( angles ), JPH::EMotionType::Static, Layers::NON_MOVING_WORLD );
+
+	if ( m_bUseLinearCast )
+		settings.mMotionQuality = JPH::EMotionQuality::LinearCast;
+
+	if ( m_bUseEnhancedEdgeDetection )
+		settings.mEnhancedInternalEdgeRemoval = true;
 
 	JPH::BodyInterface &bodyInterface = m_PhysicsSystem.GetBodyInterfaceNoLock();
 	JPH::Body *pBody = bodyInterface.CreateBody( settings );
@@ -775,7 +788,7 @@ void JoltPhysicsEnvironment::Simulate( float deltaTime )
 	for ( IJoltPhysicsController *pController : m_pPhysicsControllers )
 		pController->OnPreSimulate( deltaTime );
 
-	const int nCollisionSubSteps = vjolt_substeps_collision.GetInt();
+	const int nCollisionSubSteps = m_PhysicsSystem.GetNumActiveBodies( JPH::EBodyType::RigidBody ) > vjolt_substeps_collision_body_count_threshold.GetInt() ? vjolt_substeps_collision_high.GetInt() : vjolt_substeps_collision_low.GetInt();
 
 	// If we haven't already, optimize the broadphase, currently this can only happen once per-environment
 	if ( !m_bOptimizedBroadPhase )
@@ -791,7 +804,7 @@ void JoltPhysicsEnvironment::Simulate( float deltaTime )
 			static constexpr int InitialSubSteps = 4;
 
 			int nIterCount = 0;
-			while ( m_PhysicsSystem.GetNumActiveBodies() && nIterCount < MaxInitialIterations )
+			while ( m_PhysicsSystem.GetNumActiveBodies( JPH::EBodyType::RigidBody ) && nIterCount < MaxInitialIterations )
 			{
 				m_PhysicsSystem.Update( InitialIterationTimescale, InitialSubSteps, tempAllocator, jobSystem );
 				nIterCount++;
@@ -810,8 +823,8 @@ void JoltPhysicsEnvironment::Simulate( float deltaTime )
 	}
 	m_ContactListener.FlushCallbacks();
 
-	const JPH::BodyID *pActiveBodies = m_PhysicsSystem.GetActiveBodiesUnsafe();
-	uint32_t uActiveBodies = m_PhysicsSystem.GetNumActiveBodies();
+	const JPH::BodyID *pActiveBodies = m_PhysicsSystem.GetActiveBodiesUnsafe( JPH::EBodyType::RigidBody );
+	uint32_t uActiveBodies = m_PhysicsSystem.GetNumActiveBodies( JPH::EBodyType::RigidBody );
 	for ( uint32_t i = 0; i < uActiveBodies; i++ )
 	{
 		JPH::Body* pBody = m_PhysicsSystem.GetBodyLockInterfaceNoLock().TryGetBody( pActiveBodies[i] );
@@ -909,7 +922,7 @@ int JoltPhysicsEnvironment::GetActiveObjectCount() const
 {
 	if ( !m_bActiveObjectCountFirst )
 	{
-		m_PhysicsSystem.GetActiveBodies( m_CachedActiveBodies );
+		m_PhysicsSystem.GetActiveBodies( JPH::EBodyType::RigidBody, m_CachedActiveBodies );
 		// Append any dirty static bodies we need the game side transforms
 		// to be updated for.
 		m_CachedActiveBodies.insert( m_CachedActiveBodies.end(), m_DirtyStaticBodies.begin(), m_DirtyStaticBodies.end() );

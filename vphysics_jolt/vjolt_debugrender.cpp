@@ -57,7 +57,7 @@ void JoltPhysicsDebugRenderer::DrawLine( JPH::Vec3Arg inFrom, JPH::Vec3Arg inTo,
 #endif
 }
 
-void JoltPhysicsDebugRenderer::DrawTriangle( JPH::Vec3Arg inV1, JPH::Vec3Arg inV2, JPH::Vec3Arg inV3, JPH::ColorArg inColor )
+void JoltPhysicsDebugRenderer::DrawTriangle( JPH::Vec3Arg inV1, JPH::Vec3Arg inV2, JPH::Vec3Arg inV3, JPH::ColorArg inColor, ECastShadow inCastShadow )
 {
 	//DrawTriangle_Internal( JPH::Float3( inV1.GetX(), inV1.GetY(), inV1.GetZ() ), JPH::Float3( inV2.GetX(), inV2.GetY(), inV2.GetZ() ), JPH::Float3( inV3.GetX(), inV3.GetY(), inV3.GetZ() ), inColor );
 }

@@ -17,7 +17,7 @@ public:
 
 	void DrawLine( JPH::Vec3Arg inFrom, JPH::Vec3Arg inTo, JPH::ColorArg inColor ) override;
 
-	void DrawTriangle( JPH::Vec3Arg inV1, JPH::Vec3Arg inV2, JPH::Vec3Arg inV3, JPH::ColorArg inColor ) override;
+	void DrawTriangle( JPH::Vec3Arg inV1, JPH::Vec3Arg inV2, JPH::Vec3Arg inV3, JPH::ColorArg inColor, ECastShadow inCastShadow = ECastShadow::Off ) override;
 
 	Batch CreateTriangleBatch( const Triangle *inTriangles, int inTriangleCount ) override;
 	Batch CreateTriangleBatch( const Vertex *inVertices, int inVertexCount, const uint32 *inIndices, int inIndexCount ) override;
