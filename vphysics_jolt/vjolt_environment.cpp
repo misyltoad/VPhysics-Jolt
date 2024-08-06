@@ -810,6 +810,14 @@ void JoltPhysicsEnvironment::Simulate( float deltaTime )
 	}
 	m_ContactListener.FlushCallbacks();
 
+	const JPH::BodyID *pActiveBodies = m_PhysicsSystem.GetActiveBodiesUnsafe();
+	uint32_t uActiveBodies = m_PhysicsSystem.GetNumActiveBodies();
+	for ( uint32_t i = 0; i < uActiveBodies; i++ )
+	{
+		JPH::Body* pBody = m_PhysicsSystem.GetBodyLockInterfaceNoLock().TryGetBody( pActiveBodies[i] );
+		reinterpret_cast< JoltPhysicsObject* >( pBody->GetUserData() )->PostSimulation( deltaTime );
+	}
+
 	// Run post-simulation controllers
 	for ( IJoltPhysicsController *pController : m_pPhysicsControllers )
 		pController->OnPostSimulate( deltaTime );

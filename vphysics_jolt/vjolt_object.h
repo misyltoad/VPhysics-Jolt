@@ -190,6 +190,8 @@ public:
 	void SaveObjectState( JPH::StateRecorder &recorder );
 	void RestoreObjectState( JPH::StateRecorder &recorder );
 
+	void PostSimulation( float flTimestep );
+
 	unsigned short GetGameMaterial() const
 	{
 		return m_GameMaterial;
@@ -264,6 +266,10 @@ private:
 
 	unsigned short m_GameMaterial = 0;
 
+	Vector m_vLastVelocity;
+	AngularImpulse m_vLastAngularVelocity;
+	Vector m_vLastPosition;
+	QAngle m_qLastOrientation;
 
 	CUtlVector< IJoltObjectDestroyedListener * > m_destroyedListeners;
 

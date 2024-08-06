@@ -1,4 +1,4 @@
-﻿//=================================================================================================
+//=================================================================================================
 //
 // A physics object, implemented as a wrapper over JPH::Body
 // Every tangible object in the game has one of these
@@ -46,6 +46,12 @@ JoltPhysicsObject::JoltPhysicsObject( JPH::Body *pBody, JoltPhysicsEnvironment *
 		JPH::MotionProperties* pMotionProperties = m_pBody->GetMotionProperties();
 		pMotionProperties->SetLinearDamping( pParams->damping );
 		pMotionProperties->SetAngularDamping( pParams->rotdamping );
+	}
+
+	if ( !IsStatic() )
+	{
+		GetVelocity( &m_vLastVelocity, &m_vLastAngularVelocity );
+		GetPosition( &m_vLastPosition, &m_qLastOrientation );
 	}
 
 	UpdateMaterialProperties();
@@ -438,6 +444,12 @@ void JoltPhysicsObject::SetPosition( const Vector &worldPosition, const QAngle &
 	JPH::BodyInterface &bodyInterface = m_pPhysicsSystem->GetBodyInterfaceNoLock();
 
 	bodyInterface.SetPositionAndRotation( m_pBody->GetID(), joltPosition, joltRotation, JPH::EActivation::DontActivate );
+
+	if ( isTeleport || IsStatic() )
+	{
+		m_vLastPosition = worldPosition;
+		m_qLastOrientation = angles;
+	}
 }
 
 void JoltPhysicsObject::SetPositionMatrix( const matrix3x4_t &matrix, bool isTeleport )
@@ -545,12 +557,11 @@ void JoltPhysicsObject::GetVelocityAtPoint( const Vector &worldPosition, Vector 
 
 void JoltPhysicsObject::GetImplicitVelocity( Vector *velocity, AngularImpulse *angularVelocity ) const
 {
-	Log_Stub( LOG_VJolt );
 	if ( velocity )
-		*velocity = vec3_origin;
+		*velocity = m_vLastVelocity;
 
 	if ( angularVelocity )
-		*angularVelocity = vec3_origin;
+		*angularVelocity = m_vLastAngularVelocity;
 }
 
 void JoltPhysicsObject::LocalToWorld( Vector *worldPosition, const Vector &localPosition ) const
@@ -1200,6 +1211,28 @@ void JoltPhysicsObject::RestoreObjectState( JPH::StateRecorder &recorder )
 	// Recompute states.
 	UpdateMaterialProperties();
 	UpdateLayer();
+}
+
+//-------------------------------------------------------------------------------------------------
+
+void JoltPhysicsObject::PostSimulation( float flTimestep )
+{
+	Vector vCurrentPos, vCurrentVel;
+	AngularImpulse vAngularImpulse;
+	QAngle qCurrentOrientation;
+
+	GetPosition( &vCurrentPos, &qCurrentOrientation );
+	GetVelocity( &vCurrentVel, &vAngularImpulse );
+
+	m_vLastVelocity = ( vCurrentPos - m_vLastPosition ) / flTimestep;
+	m_vLastPosition = vCurrentPos;
+
+	Vector vGlobalAngleVelocity;
+	QAngleToAngularImpulse( ( qCurrentOrientation - m_qLastOrientation ) / flTimestep, vGlobalAngleVelocity );
+
+	m_vLastAngularVelocity = JoltToSource::Unitless( m_pBody->GetWorldTransform().Multiply3x3Transposed( SourceToJolt::Unitless( vGlobalAngleVelocity ) ) );
+
+	m_qLastOrientation = qCurrentOrientation;
 }
 
 //-------------------------------------------------------------------------------------------------
