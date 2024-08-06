@@ -232,9 +232,9 @@ public:
 		m_pBody->SetLinearVelocity( realVelocity );
 	}
 
+	void UpdateLayer();
 private:
 	void UpdateMaterialProperties();
-	void UpdateLayer();
 
 	// Josh:
 	// Always put m_pGameData first. Some games that will
