@@ -52,6 +52,13 @@ JoltPhysicsObject::JoltPhysicsObject( JPH::Body *pBody, JoltPhysicsEnvironment *
 	{
 		GetVelocity( &m_vLastVelocity, &m_vLastAngularVelocity );
 		GetPosition( &m_vLastPosition, &m_qLastOrientation );
+
+		if ( pParams->dragCoefficient != 0.0f )
+		{
+			float flDrag = pParams->dragCoefficient;
+			SetDragCoefficient( &flDrag, &flDrag );
+			EnableDrag( true );
+		}
 	}
 
 	UpdateMaterialProperties();
@@ -127,8 +134,7 @@ bool JoltPhysicsObject::IsGravityEnabled() const
 
 bool JoltPhysicsObject::IsDragEnabled() const
 {
-	Log_Stub( LOG_VJolt );
-	return false;
+	return m_bDragEnabled;
 }
 
 bool JoltPhysicsObject::IsMotionEnabled() const
@@ -168,7 +174,14 @@ void JoltPhysicsObject::EnableGravity( bool enable )
 
 void JoltPhysicsObject::EnableDrag( bool enable )
 {
+	if ( IsStatic() )
+		return;
+
+	if ( m_bDragEnabled == enable )
+		return;
+
 	Log_Stub( LOG_VJolt );
+	m_bDragEnabled = true;
 }
 
 void JoltPhysicsObject::EnableMotion( bool enable )
@@ -361,7 +374,14 @@ void JoltPhysicsObject::GetDamping( float *speed, float *rot ) const
 
 void JoltPhysicsObject::SetDragCoefficient( float *pDrag, float *pAngularDrag )
 {
-	Log_Stub( LOG_VJolt );
+	if ( pDrag )
+		m_flLinearDragCoefficient = *pDrag;
+
+	if ( pAngularDrag )
+		m_flAngularDragCoefficient = *pAngularDrag;
+
+	// Source 1 behaviour...
+	EnableDrag( m_flLinearDragCoefficient || m_flAngularDragCoefficient );
 }
 
 void JoltPhysicsObject::SetBuoyancyRatio( float ratio )
@@ -943,6 +963,12 @@ const char *JoltPhysicsObject::GetName() const
 
 void JoltPhysicsObject::BecomeTrigger()
 {
+	if ( IsTrigger() )
+		return;
+
+	EnableDrag( false );
+	EnableGravity( false );
+
 	m_pBody->SetIsSensor( true );
 }
 
@@ -950,6 +976,8 @@ void JoltPhysicsObject::RemoveTrigger()
 {
 	if ( !IsTrigger() )
 		return;
+
+	// Note: Does not change drag/gravity state back, to mimick Source 1 behaviour.
 
 	// Josh:
 	// All this logic below is to trigger ObjectLeaveTrigger
@@ -1303,4 +1331,13 @@ void JoltPhysicsObject::UpdateLayer()
 		layer = Layers::NO_COLLIDE;
 
 	bodyInterface.SetObjectLayer( m_pBody->GetID(), layer );
+}
+
+void JoltPhysicsObject::RecomputeDrag()
+{
+	if ( IsStatic() )
+		return;
+
+	Vector vDragMins, vDragMaxs;
+	JoltPhysicsCollision::GetInstance().CollideGetAABB( &vDragMins, &vDragMaxs, GetCollide(), vec3_origin, vec3_angle );
 }

@@ -233,6 +233,7 @@ public:
 	}
 
 	void UpdateLayer();
+	void RecomputeDrag();
 private:
 	void UpdateMaterialProperties();
 
@@ -259,6 +260,10 @@ private:
 	float m_flCachedMass = 0.0f;
 	float m_flCachedInvMass = 0.0f;
 	bool m_bCachedCollisionEnabled = true;
+
+	bool m_bDragEnabled = false;
+	float m_flLinearDragCoefficient = 0.0f;
+	float m_flAngularDragCoefficient = 0.0f;
 
 	float m_flMaterialDensity = 1.0f; // Material density in Jolt space.
 	float m_flBuoyancyRatio = 0.0f;
