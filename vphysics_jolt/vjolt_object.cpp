@@ -671,12 +671,10 @@ void JoltPhysicsObject::CalculateVelocityOffset( const Vector &forceVector, cons
 	{
 		JPH::Vec3 siPosition = SourceToJolt::Distance( worldPosition );
 
-		// TODO(Josh): Check this math.
 		JPH::Vec3 siRelativePosition = siPosition - m_pBody->GetCenterOfMassPosition();
 		JPH::Vec3 cross = siRelativePosition.Cross( siForce );
-		cross = m_pBody->GetWorldTransform().Transposed3x3() * cross;
 
-		*centerAngularVelocity = JoltToSource::AngularImpulse( cross );
+		*centerAngularVelocity = JoltToSource::AngularImpulse( m_pBody->GetInverseInertia() * cross );
 	}
 }
 
