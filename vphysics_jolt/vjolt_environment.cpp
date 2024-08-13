@@ -631,8 +631,9 @@ IPhysicsConstraint *JoltPhysicsEnvironment::CreateBallsocketConstraint( IPhysics
 
 IPhysicsConstraint *JoltPhysicsEnvironment::CreatePulleyConstraint( IPhysicsObject *pReferenceObject, IPhysicsObject *pAttachedObject, IPhysicsConstraintGroup *pGroup, const constraint_pulleyparams_t &pulley )
 {
-	Log_Stub( LOG_VJolt );
-	return nullptr;
+	JoltPhysicsConstraint *pConstraint = new JoltPhysicsConstraint( this, pReferenceObject, pAttachedObject );
+	pConstraint->InitialisePulley( pGroup, pulley );
+	return pConstraint;
 }
 
 IPhysicsConstraint *JoltPhysicsEnvironment::CreateLengthConstraint( IPhysicsObject *pReferenceObject, IPhysicsObject *pAttachedObject, IPhysicsConstraintGroup *pGroup, const constraint_lengthparams_t &length )
