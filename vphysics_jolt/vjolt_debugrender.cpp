@@ -45,7 +45,7 @@ JoltPhysicsDebugRenderer::~JoltPhysicsDebugRenderer()
 {
 }
 
-void JoltPhysicsDebugRenderer::DrawLine( JPH::Vec3Arg inFrom, JPH::Vec3Arg inTo, JPH::ColorArg inColor )
+void JoltPhysicsDebugRenderer::DrawLine( JPH::RVec3Arg inFrom, JPH::RVec3Arg inTo, JPH::ColorArg inColor )
 {
 	Vector v1 = JoltToSource::Distance( inFrom );
 	Vector v2 = JoltToSource::Distance( inTo );
@@ -57,7 +57,7 @@ void JoltPhysicsDebugRenderer::DrawLine( JPH::Vec3Arg inFrom, JPH::Vec3Arg inTo,
 #endif
 }
 
-void JoltPhysicsDebugRenderer::DrawTriangle( JPH::Vec3Arg inV1, JPH::Vec3Arg inV2, JPH::Vec3Arg inV3, JPH::ColorArg inColor, ECastShadow inCastShadow )
+void JoltPhysicsDebugRenderer::DrawTriangle( JPH::RVec3Arg inV1, JPH::RVec3Arg inV2, JPH::RVec3Arg inV3, JPH::ColorArg inColor, ECastShadow inCastShadow )
 {
 	//DrawTriangle_Internal( JPH::Float3( inV1.GetX(), inV1.GetY(), inV1.GetZ() ), JPH::Float3( inV2.GetX(), inV2.GetY(), inV2.GetZ() ), JPH::Float3( inV3.GetX(), inV3.GetY(), inV3.GetZ() ), inColor );
 }
@@ -176,7 +176,7 @@ void JoltPhysicsDebugRenderer::DrawGeometry( JPH::Mat44Arg inModelMatrix, const 
 #endif
 }
 
-void JoltPhysicsDebugRenderer::DrawText3D( JPH::Vec3Arg inPosition, const std::string_view &inString, JPH::ColorArg inColor, float inHeight )
+void JoltPhysicsDebugRenderer::DrawText3D( JPH::RVec3Arg inPosition, const std::string_view &inString, JPH::ColorArg inColor, float inHeight )
 {
 	// Josh:
 	// Doing a copy of 1024, the max size allowed by a debug overlay
