@@ -567,6 +567,39 @@ void JoltPhysicsConstraint::InitialiseLength( IPhysicsConstraintGroup *pGroup, c
 }
 
 //-------------------------------------------------------------------------------------------------
+// Pulley
+//-------------------------------------------------------------------------------------------------
+
+void JoltPhysicsConstraint::InitialisePulley( IPhysicsConstraintGroup *pGroup, const constraint_pulleyparams_t &pulley )
+{
+	SetGroup( pGroup );
+	m_ConstraintType = CONSTRAINT_PULLEY;
+
+	// Get our bodies
+	JPH::Body* refBody = m_pObjReference->GetBody();
+	JPH::Body* attBody = m_pObjAttached->GetBody();
+
+	JPH::PulleyConstraintSettings settings;
+	settings.mNumVelocityStepsOverride = vjolt_constraint_velocity_substeps.GetInt();
+	settings.mNumPositionStepsOverride = vjolt_constraint_position_substeps.GetInt();
+	settings.mSpace = JPH::EConstraintSpace::LocalToBodyCOM;
+	settings.mBodyPoint1 = SourceToJolt::Distance( pulley.objectPosition[0] ) - refBody->GetShape()->GetCenterOfMass();
+	settings.mBodyPoint2 = SourceToJolt::Distance( pulley.objectPosition[1] ) - attBody->GetShape()->GetCenterOfMass();
+
+	settings.mFixedPoint1 = SourceToJolt::Distance( pulley.pulleyPosition[0] );
+	settings.mFixedPoint2 = SourceToJolt::Distance( pulley.pulleyPosition[1] );
+
+	settings.mRatio = pulley.gearRatio;
+
+	settings.mMaxLength = SourceToJolt::Distance( pulley.totalLength ); // PiMoN: from my testing, it is the same value as Jolt would calculate automatically
+
+	m_pConstraint = settings.Create( *refBody, *attBody );
+	m_pConstraint->SetEnabled( !pGroup && pulley.constraint.isActive );
+
+	m_pPhysicsSystem->AddConstraint( m_pConstraint );
+}
+
+//-------------------------------------------------------------------------------------------------
 
 void JoltPhysicsConstraint::SaveConstraintSettings( JPH::StateRecorder &recorder )
 {
