@@ -22,7 +22,7 @@ It is not meant to be a bash on anyone elses work however, the Bullet VPhysics p
 | Feature       | VPhysics | Volt (VPhysics Jolt) | Bullet VPhysics |
 |:--------------|:--------:|:-------------:|:---------------:|
 | Constraints (except Pulleys)                                  | ✔️ | ✔️ | ✔️ |
-| Pulleys                                                       | ✔️ | ❌ | ❌ |
+| Pulleys                                                       | ✔️ | ✔️ | ❌ |
 | Breakable constraints                                         | ✔️ | ❌ | ❌ |
 | Motors (Motion Controllers)                                   | ✔️ | ✔️ | ✔️ |
 | Motors (Constraint)                                           | ✔️ | ✔️ | ❌ |
