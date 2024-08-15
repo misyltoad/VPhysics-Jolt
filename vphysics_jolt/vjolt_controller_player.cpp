@@ -106,11 +106,11 @@ void JoltPhysicsPlayerController::MaxSpeed( const Vector &velocity )
 	float flDot = DotProduct( vDirection, vCurrentVelocity );
 	if ( flDot > 0 )
 	{
-		m_vMaxSpeed = VectorAbs( velocity - ( vDirection * flDot * flLength ) );
+		m_vMaxSpeed = Abs( velocity - ( vDirection * flDot * flLength ) );
 	}
 	else
 	{
-		m_vMaxSpeed = VectorAbs( velocity );
+		m_vMaxSpeed = Abs( velocity );
 	}
 }
 
