@@ -261,14 +261,14 @@ void JoltPhysicsConstraint::OnJoltPhysicsObjectDestroyed( JoltPhysicsObject *pOb
 // Ragdoll
 //-------------------------------------------------------------------------------------------------
 
-static std::optional<MatrixAxisType_t> DOFBitToAxis( uint32 uDOFMask )
+static std::optional<JoltMatrixAxes> DOFBitToAxis( uint32 uDOFMask )
 {
 	if ( uDOFMask & 0b001 )
-		return X_AXIS;
+		return MatrixAxis::X;
 	else if ( uDOFMask & 0b010 )
-		return Y_AXIS;
+		return MatrixAxis::Y;
 	else if ( uDOFMask & 0b100 )
-		return Z_AXIS;
+		return MatrixAxis::Z;
 	else
 		return std::nullopt;
 }
@@ -354,13 +354,13 @@ void JoltPhysicsConstraint::InitialiseRagdoll( IPhysicsConstraintGroup *pGroup, 
 	}
 	else if ( uDOFCount == 1 )
 	{
-		MatrixAxisType_t eAxis = *DOFBitToAxis( uDOFMask );
+		JoltMatrixAxes eAxis = *DOFBitToAxis( uDOFMask );
 
 		JPH::HingeConstraintSettings settings;
-		settings.mPoint1 = SourceToJolt::Distance( constraintToWorld.GetOrigin() );
-		settings.mPoint2 = SourceToJolt::Distance( constraintToWorld.GetOrigin() );
-		settings.mHingeAxis1 = SourceToJolt::Unitless( constraintToWorld.GetColumn( eAxis ) );
-		settings.mHingeAxis2 = SourceToJolt::Unitless( constraintToWorld.GetColumn( eAxis ) );
+		settings.mPoint1 = SourceToJolt::Distance( GetColumn( constraintToWorld, MatrixAxis::Origin ) );
+		settings.mPoint2 = SourceToJolt::Distance( GetColumn( constraintToWorld, MatrixAxis::Origin ) );
+		settings.mHingeAxis1 = SourceToJolt::Unitless( GetColumn( constraintToWorld, eAxis ) );
+		settings.mHingeAxis2 = SourceToJolt::Unitless( GetColumn( constraintToWorld, eAxis ) );
 		settings.mNormalAxis1 = HingePerpendicularVector( settings.mHingeAxis1 );
 		settings.mNormalAxis2 = HingePerpendicularVector( settings.mHingeAxis2 );
 		settings.mLimitsMin = limits.lAxisLimitsRad[ eAxis ].Min;
