@@ -41,7 +41,7 @@ It is not meant to be a bash on anyone elses work however, the Bullet VPhysics p
 | Crash-resistant solver                                        | ❌ | ✔️ | (no data) |
 | Supports thousands of objects without lag                     | ❌ | ✔️ | ❌ |
 | Multithreaded                                                 | ❌ | ✔️ | ✔️ (partially) |
-| Proper player controller                                      | ✔️ | ❌ (needs work!) | ✔️ (partially) |
+| Proper player controller                                      | ✔️ | ✔️ | ✔️ (partially) |
 
 ## Bugs
 
