@@ -324,7 +324,7 @@ Vector JoltPhysicsObject::GetInertia() const
 	JPH::Vec3 joltInertiaTensor = m_pBody->GetMotionProperties()->GetInverseInertiaDiagonal().Reciprocal();
 	Vector vInertiaTensor = JoltToSource::Distance( joltInertiaTensor );
 	// For some reason, Source abs's in GetInertia/GetInvInertia. Don't ask me why.
-	return VectorAbs( vInertiaTensor );
+	return Abs( vInertiaTensor );
 }
 
 Vector JoltPhysicsObject::GetInvInertia() const
@@ -334,7 +334,7 @@ Vector JoltPhysicsObject::GetInvInertia() const
 
 	JPH::Vec3 joltInertiaTensor = m_pBody->GetMotionProperties()->GetInverseInertiaDiagonal();
 	Vector vInertiaTensor = JoltToSource::Distance( joltInertiaTensor );
-	return VectorAbs( vInertiaTensor );
+	return Abs( vInertiaTensor );
 }
 
 void JoltPhysicsObject::SetInertia( const Vector &inertia )
