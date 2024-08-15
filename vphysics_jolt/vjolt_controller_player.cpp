@@ -214,6 +214,7 @@ bool JoltPhysicsPlayerController::OnContactValidate( const JPH::CharacterVirtual
 void JoltPhysicsPlayerController::OnContactAdded( const JPH::CharacterVirtual* inCharacter, const JPH::BodyID& inBodyID2, const JPH::SubShapeID& inSubShapeID2, JPH::RVec3Arg inContactPosition, JPH::Vec3Arg inContactNormal, JPH::CharacterContactSettings& ioSettings )
 {
 	JoltPhysicsContactListener *pListener = m_pObject->GetEnvironment()->GetContactListener();
+	( void )pListener;
 }
 
 //-------------------------------------------------------------------------------------------------
