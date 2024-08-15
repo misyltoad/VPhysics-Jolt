@@ -26,7 +26,7 @@ It is not meant to be a bash on anyone elses work however, the Bullet VPhysics p
 | Breakable constraints                                         | ✔️ | ❌ | ❌ |
 | Motors (Motion Controllers)                                   | ✔️ | ✔️ | ✔️ |
 | Motors (Constraint)                                           | ✔️ | ✔️ | ❌ |
-| Ragdolls                                                      | ✔️ | ✔️ (some bugs) | ✔️ |
+| Ragdolls                                                      | ✔️ | ✔️ | ✔️ |
 | Triggers                                                      | ✔️ | ✔️ | ❌ |
 | Object touch callbacks                                        | ✔️ | ✔️ | ❌ |
 | Prop damage/breaking                                          | ✔️ | ✔️ | ❌ |
