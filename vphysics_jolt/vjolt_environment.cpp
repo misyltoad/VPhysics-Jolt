@@ -222,17 +222,15 @@ JoltPhysicsEnvironment::JoltPhysicsEnvironment()
 	// Registering one is entirely optional.
 	m_PhysicsSystem.SetContactListener( &m_ContactListener );
 
-	// Source clamps friction from 0 -> 1, so lets do that.
 	m_PhysicsSystem.SetCombineFriction( []( const JPH::Body &inBody1, const JPH::SubShapeID &inSubShapeID1, const JPH::Body &inBody2, const JPH::SubShapeID &inSubShapeID2 ) -> float
 	{
-		return Clamp( inBody1.GetFriction() * inBody2.GetFriction(), 0.0f, 1.0f );
+		return sqrt( inBody1.GetFriction() * inBody2.GetFriction() );
 	} );
 
-	// Jolt normally does max( x, y ) for resitution, but
-	// Source's values expect them to be multiplied and clamped.
+	// Source's values expect them to be multiplied.
 	m_PhysicsSystem.SetCombineRestitution( []( const JPH::Body &inBody1, const JPH::SubShapeID& inSubShapeID1, const JPH::Body &inBody2, const JPH::SubShapeID& inSubShapeID2 ) -> float
 	{
-		return Clamp( inBody1.GetRestitution() * inBody2.GetRestitution(), 0.0f, 1.0f );
+		return inBody1.GetRestitution() * inBody2.GetRestitution();
 	} );
 
 	// Set our linear cast member
