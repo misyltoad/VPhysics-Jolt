@@ -499,7 +499,8 @@ JoltPhysicsSpring::~JoltPhysicsSpring()
 	if ( m_pObjectEnd )
 		m_pObjectEnd->RemoveDestroyedListener( this );
 
-	m_pPhysicsSystem->RemoveConstraint( m_pConstraint );
+	if ( m_pConstraint )
+		m_pPhysicsSystem->RemoveConstraint( m_pConstraint );
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -518,6 +519,9 @@ void JoltPhysicsSpring::GetEndpoints( Vector *worldPositionStart, Vector *worldP
 
 void JoltPhysicsSpring::SetSpringConstant( float flSpringConstant )
 {
+	if ( !m_pConstraint )
+		return;
+
 	m_pObjectStart->Wake();
 	m_pObjectEnd->Wake();
 
@@ -527,6 +531,9 @@ void JoltPhysicsSpring::SetSpringConstant( float flSpringConstant )
 
 void JoltPhysicsSpring::SetSpringDamping( float flSpringDamping )
 {
+	if ( !m_pConstraint )
+		return;
+
 	m_pObjectStart->Wake();
 	m_pObjectEnd->Wake();
 
@@ -536,6 +543,9 @@ void JoltPhysicsSpring::SetSpringDamping( float flSpringDamping )
 
 void JoltPhysicsSpring::SetSpringLength( float flSpringLength )
 {
+	if ( !m_pConstraint )
+		return;
+
 	m_pObjectStart->Wake();
 	m_pObjectEnd->Wake();
 
@@ -564,6 +574,11 @@ void JoltPhysicsSpring::OnJoltPhysicsObjectDestroyed( JoltPhysicsObject *pObject
 
 	if ( pObject == m_pObjectEnd )
 		m_pObjectEnd = nullptr;
+
+	// Raphael: As soon as one of the physics objects / bodies get destroyed, 
+	//          we need to remove the constraint or else it will crash on the next simulation.
+	m_pPhysicsSystem->RemoveConstraint( m_pConstraint );
+	m_pConstraint = nullptr;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -771,10 +786,6 @@ void JoltPhysicsEnvironment::Simulate( float deltaTime )
 	// doing the simulation...
 	m_ContactListener.PostSimulationFrame();
 
-	// RaphaelIT7: We need to delete all dead objects after m_ContactListener.PostSimulationFrame, or else Jolt freaks out for some reason.
-	// This also needs to be before pController->OnPreSimulate or else we get some crashes.
-	DeleteDeadObjects( true );
-
 	// Run pre-simulation controllers
 	for ( IJoltPhysicsController *pController : m_pPhysicsControllers )
 		pController->OnPreSimulate( deltaTime );
@@ -822,10 +833,8 @@ void JoltPhysicsEnvironment::Simulate( float deltaTime )
 
 	// If the delete queue is disabled, we only added to it during the simulation
 	// ie. callbacks etc. So flush that now.
-	if ( !m_bEnableDeleteQueue ) {
+	if ( !m_bEnableDeleteQueue )
 		DeleteDeadObjects();
-		DeleteDeadObjects( true ); // Also delete all bodies
-	}
 
 #ifdef JPH_DEBUG_RENDERER
 	JoltPhysicsDebugRenderer::GetInstance().RenderPhysicsSystem( m_PhysicsSystem );
@@ -1436,21 +1445,19 @@ void JoltPhysicsEnvironment::RemoveBodyAndDeleteObject( JoltPhysicsObject *pObje
 	delete pObject;
 }
 
-void JoltPhysicsEnvironment::DeleteDeadObjects( bool delBodies )
+void JoltPhysicsEnvironment::DeleteDeadObjects()
 {
-	if ( delBodies ) {
-		for ( JoltPhysicsObject *pObject : m_pDeadObjects )
-			RemoveBodyAndDeleteObject( pObject );
-		m_pDeadObjects.clear();
-	} else {
-		for ( JoltPhysicsConstraint *pConstraint : m_pDeadConstraints )
-			delete pConstraint;
-		m_pDeadConstraints.clear();
+	for ( JoltPhysicsObject *pObject : m_pDeadObjects )
+		RemoveBodyAndDeleteObject( pObject );
+	m_pDeadObjects.clear();
 
-		for ( CPhysCollide *pCollide : m_pDeadObjectCollides )
-			JoltPhysicsCollision::GetInstance().DestroyCollide( pCollide );
-		m_pDeadObjectCollides.clear();
-	}
+	for ( JoltPhysicsConstraint *pConstraint : m_pDeadConstraints )
+		delete pConstraint;
+	m_pDeadConstraints.clear();
+
+	for ( CPhysCollide *pCollide : m_pDeadObjectCollides )
+		JoltPhysicsCollision::GetInstance().DestroyCollide( pCollide );
+	m_pDeadObjectCollides.clear();
 }
 
 //-------------------------------------------------------------------------------------------------
