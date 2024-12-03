@@ -11,8 +11,6 @@ $Configuration
 		$AdditionalIncludeDirectories	"$BASE;$SRCDIR\vphysics_jolt\joltphysics\src"
 
 		$PreprocessorDefinitions		"$BASE;JPH_DISABLE_CUSTOM_ALLOCATOR;JPH_DEBUG_RENDERER"
-		$PreprocessorDefinitions		"$BASE;JPH_ENABLE_ASSERTS"		[$DEVELOPMENT_ONLY]
-		//$PreprocessorDefinitions		"$BASE;JPH_PROFILE_ENABLED"		[$DEVELOPMENT_ONLY]
 
 		// Feature test stuff for the AVX2 build
 		$PreprocessorDefinitions		"$BASE;JPH_USE_SSE4_1;JPH_USE_SSE4_2;JPH_USE_AVX;JPH_USE_AVX2;JPH_USE_LZCNT;JPH_USE_TZCNT;JPH_USE_F16C;JPH_USE_FMADD"	[$VOLT_AVX2]
@@ -26,5 +24,14 @@ $Configuration
 		
 		// Feature test stuff for the SSE 2 build
 		$EnableEnhancedInstructionSet	"Streaming SIMD Extensions 2 (/arch:SSE2)"		[$WIN32 && $VOLT_SSE2]		// Source 2013 doesn't enable this by default
+	}
+}
+
+$Configuration "Debug"
+{
+	$Compiler
+	{
+		$PreprocessorDefinitions		"$BASE;JPH_ENABLE_ASSERTS"
+		//$PreprocessorDefinitions		"$BASE;JPH_PROFILE_ENABLED"
 	}
 }
