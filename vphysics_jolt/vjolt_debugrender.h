@@ -47,16 +47,20 @@ private:
 	class BatchImpl final : public JPH::RefTargetVirtual, public JPH::RefTarget<BatchImpl>
 	{
 	public:
-		BatchImpl( IMesh *pMesh )
-			: m_pMesh( pMesh ) { }
+		BatchImpl() {}
+		BatchImpl( IMesh *pMesh ) { AddMesh( pMesh ); }
+		~BatchImpl();
 
 		void AddRef() override { JPH::RefTarget<BatchImpl>::AddRef(); }
 		void Release() override { JPH::RefTarget<BatchImpl>::Release(); }
 
-		IMesh* GetMesh() const { return m_pMesh; }
+		void AddMesh( IMesh* pMesh ) { m_Meshes.AddToTail( pMesh ); }
+
+		int Count() const { return m_Meshes.Count(); }
+		IMesh* GetMesh(int i) const { return m_Meshes[i]; }
 
 	private:
-		IMesh *m_pMesh;
+		CUtlVector<IMesh*> m_Meshes;
 	};
 
 	bool m_bShouldClear = false;
