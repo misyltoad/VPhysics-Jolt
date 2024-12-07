@@ -45,6 +45,13 @@ JoltPhysicsDebugRenderer::~JoltPhysicsDebugRenderer()
 {
 }
 
+JoltPhysicsDebugRenderer::BatchImpl::~BatchImpl()
+{
+	CMatRenderContextPtr pRenderContext(g_pMaterialSystem);
+	for (int i = 0; i < m_Meshes.Count(); i++)
+		pRenderContext->DestroyStaticMesh(m_Meshes[i]);
+}
+
 void JoltPhysicsDebugRenderer::DrawLine( JPH::Vec3Arg inFrom, JPH::Vec3Arg inTo, JPH::ColorArg inColor )
 {
 	Vector v1 = JoltToSource::Distance( inFrom );
@@ -72,23 +79,48 @@ JoltPhysicsDebugRenderer::Batch JoltPhysicsDebugRenderer::CreateTriangleBatch( c
 
 	constexpr VertexFormat_t fmt = VERTEX_POSITION | VERTEX_NORMAL | VERTEX_COLOR | VERTEX_TEXCOORD_SIZE(0, 2);
 
-	IMesh* pMesh = pRenderContext->CreateStaticMesh( fmt, JOLT_VERTEX_BUFFER_NAME );
+	IMesh* pFirstMesh = pRenderContext->CreateStaticMesh( fmt, JOLT_VERTEX_BUFFER_NAME );
 
-	CMeshBuilder meshBuilder;
-	meshBuilder.Begin( pMesh, MATERIAL_TRIANGLES, inTriangleCount );
+	int maxVerts, maxIndices;
+	pRenderContext->GetMaxToRender( pFirstMesh, true, &maxVerts, &maxIndices );
+
+	// Divide into maximally sized batches (aligned to tris)
+	int batchSize = maxVerts / 3;
+	int numBatches = inTriangleCount / batchSize;
+	int numRemaining = inTriangleCount % batchSize;
+
+	BatchImpl* batch = new BatchImpl;
+
+	auto AddBatch = [&]( int batchIndex, int firstVertex, int triCount )
 	{
-		for (int i = 0; i < inVertexCount; ++i)
-		{
-			meshBuilder.Position3f  ( inVertices[i].mPosition.x * JoltToSource::Factor, inVertices[i].mPosition.y * JoltToSource::Factor, inVertices[i].mPosition.z * JoltToSource::Factor );
-			meshBuilder.Normal3f    ( inVertices[i].mNormal.x, inVertices[i].mNormal.y, inVertices[i].mNormal.z );
-			meshBuilder.TexCoord2f  ( 0, inVertices[i].mUV.x, inVertices[i].mUV.y );
-			meshBuilder.Color4Packed( inVertices[i].mColor.mU32 );
-			meshBuilder.AdvanceVertex();
-		}
-	}
-	meshBuilder.End();
+		IMesh* pMesh = batchIndex == 0 ? pFirstMesh : pRenderContext->CreateStaticMesh( fmt, JOLT_VERTEX_BUFFER_NAME );
+		int vertCount = triCount * 3;
 
-	return new BatchImpl( pMesh );
+		CMeshBuilder meshBuilder;
+		meshBuilder.Begin( pMesh, MATERIAL_TRIANGLES, triCount );
+		{
+			for (int idx = 0; idx < vertCount; ++idx)
+			{
+				int i = firstVertex + idx;
+				meshBuilder.Position3f  ( inVertices[i].mPosition.x * JoltToSource::Factor, inVertices[i].mPosition.y * JoltToSource::Factor, inVertices[i].mPosition.z * JoltToSource::Factor );
+				meshBuilder.Normal3f    ( inVertices[i].mNormal.x, inVertices[i].mNormal.y, inVertices[i].mNormal.z );
+				meshBuilder.TexCoord2f  ( 0, inVertices[i].mUV.x, inVertices[i].mUV.y );
+				meshBuilder.Color4Packed( inVertices[i].mColor.mU32 );
+				meshBuilder.AdvanceVertex();
+			}
+		}
+		meshBuilder.End();
+
+		batch->AddMesh( pMesh );
+	};
+
+	for ( int i = 0; i < numBatches; i++ )
+		AddBatch( i, i * batchSize * 3, batchSize );
+
+	if ( numRemaining > 0 )
+		AddBatch( numBatches, numBatches * batchSize * 3, numRemaining );
+
+	return batch;
 #else
 	return nullptr;
 #endif
@@ -157,22 +189,25 @@ void JoltPhysicsDebugRenderer::DrawGeometry( JPH::Mat44Arg inModelMatrix, const 
 
 	bool bForceWireFrame = vjolt_debugrender_wireframe.GetInt() == 2;
 
-	DebugOverlayMeshDesc_t desc =
+	for (int i = 0; i < batch->Count(); i++)
 	{
-		.pMesh				= batch->GetMesh(),
-		.matTransform		= sourceMatrix,
-		.flDuration			= -1.0f,
-		.bIgnoreZ			= false,
-		.bWireframe			= inDrawMode == EDrawMode::Wireframe || bForceWireFrame,
-		.bClearRT			= vjolt_debugrender_clear_rt.GetBool(),
-		.bClearDepth		= vjolt_debugrender_clear_depth.GetBool(),
-		.colClearColor		= clearColor,
-		.colModulateColor	= modulateColor,
-		.eCullMode			= ConvertCullMode( inCullMode ),
-		.bPip				= vjolt_debugrender_picture_in_picture.GetBool()
-	};
+		DebugOverlayMeshDesc_t desc =
+		{
+			.pMesh				= batch->GetMesh(i),
+			.matTransform		= sourceMatrix,
+			.flDuration			= -1.0f,
+			.bIgnoreZ			= false,
+			.bWireframe			= inDrawMode == EDrawMode::Wireframe || bForceWireFrame,
+			.bClearRT			= vjolt_debugrender_clear_rt.GetBool(),
+			.bClearDepth		= vjolt_debugrender_clear_depth.GetBool(),
+			.colClearColor		= clearColor,
+			.colModulateColor	= modulateColor,
+			.eCullMode			= ConvertCullMode( inCullMode ),
+			.bPip				= vjolt_debugrender_picture_in_picture.GetBool()
+		};
 
-	GetDebugOverlay()->DrawMesh( desc );
+		GetDebugOverlay()->DrawMesh( desc );
+	}
 #endif
 }
 
