@@ -473,7 +473,7 @@ static float CalculateSourceFraction( const Vector &rayDelta, float fraction, co
 //
 // Casts a box against a shape
 //
-static void CastBoxVsShape( const Ray_t &ray, uint32 contentsMask, IConvexInfo *pConvexInfo, const CPhysCollide *pCollide, const Vector &collideOrigin, const QAngle &collideAngles, trace_t *pTrace )
+static void CastBoxVsShape( const Ray_t &ray, uint32 contentsMask, IConvexInfo *pConvexInfo, const CPhysCollide *pCollide, const Vector &collideOrigin, const QAngle &collideAngles, trace_t *pTrace, bool mForceBackFace = false )
 {
 	const JPH::Shape *pShape = pCollide->ToShape();
 
@@ -492,7 +492,7 @@ static void CastBoxVsShape( const Ray_t &ray, uint32 contentsMask, IConvexInfo *
 	//settings.mBackFaceModeTriangles = JPH::EBackFaceMode::CollideWithBackFaces;
 	// Josh: Had to re-enable CollideWithBackFaces to allow triggers for the Portal Environment to work.
 	// Come back here if we start getting stuck on things again...
-	if ( vjolt_trace_portal_hack.GetBool() )
+	if ( mForceBackFace || vjolt_trace_portal_hack.GetBool() )
 		settings.mBackFaceModeConvex = JPH::EBackFaceMode::CollideWithBackFaces;
 	//settings.mCollisionTolerance = kCollisionTolerance;
 	settings.mUseShrunkenShapeAndConvexRadius = true;
@@ -741,7 +741,8 @@ static void TraceBase( const Ray_t &ray, uint32 contentsMask, IConvexInfo *pConv
 		if ( isCollide )
 		{
 			// TODO(Slart): This should be CollideBoxVsShape, but I can't remember why it wasn't good enough...
-			CastBoxVsShape( ray, contentsMask, pConvexInfo, pCollide, collideOrigin, collideAngles, pTrace );
+			// RaphaelIT7: We need to use JPH::EBackFaceMode::CollideWithBackFaces because else the traces the engine uses to determent if you can unduck fail.
+			CastBoxVsShape( ray, contentsMask, pConvexInfo, pCollide, collideOrigin, collideAngles, pTrace, true );
 		}
 		else
 		{
