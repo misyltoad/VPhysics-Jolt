@@ -61,9 +61,9 @@ void JoltCollisionQuery::GetTriangleVerts( int convexIndex, int triangleIndex, V
 
 			if ( triangleIndex >= i && triangleIndex < i + count )
 			{
-				verts[ 0 ] = JoltToSource::Distance( vertices[ ( triangleIndex % kRequestedTriangles ) * 3 + 0 ] );
-				verts[ 1 ] = JoltToSource::Distance( vertices[ ( triangleIndex % kRequestedTriangles ) * 3 + 1 ] );
-				verts[ 2 ] = JoltToSource::Distance( vertices[ ( triangleIndex % kRequestedTriangles ) * 3 + 2 ] );
+				verts[ 0 ] = JoltToSource::Distance( vertices[ ( triangleIndex % kRequestedTriangles ) * 3 + 0 ] ) + JoltToSource::Distance( pShape->GetCenterOfMass() );
+				verts[ 1 ] = JoltToSource::Distance( vertices[ ( triangleIndex % kRequestedTriangles ) * 3 + 1 ] ) + JoltToSource::Distance( pShape->GetCenterOfMass() );
+				verts[ 2 ] = JoltToSource::Distance( vertices[ ( triangleIndex % kRequestedTriangles ) * 3 + 2 ] ) + JoltToSource::Distance( pShape->GetCenterOfMass() );
 				return 0;
 			}
 
