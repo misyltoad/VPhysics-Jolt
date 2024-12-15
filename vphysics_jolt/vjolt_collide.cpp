@@ -95,7 +95,9 @@ float JoltPhysicsCollision::ConvexSurfaceArea( CPhysConvex *pConvex )
 
 void JoltPhysicsCollision::SetConvexGameData( CPhysConvex *pConvex, unsigned int gameData )
 {
-	pConvex->ToConvexShape()->SetUserData( gameData );
+	JPH::Shape *shape = pConvex->ToConvexShape();
+	const uint64 upper = shape->GetUserData() & 0xFFFFFFFF00000000;
+	shape->SetUserData( gameData | upper );
 }
 
 void JoltPhysicsCollision::ConvexFree( CPhysConvex *pConvex )
@@ -203,26 +205,6 @@ void JoltPhysicsCollision::DestroyCollide( CPhysCollide *pCollide )
 
 //-------------------------------------------------------------------------------------------------
 
-int JoltPhysicsCollision::CollideSize( CPhysCollide *pCollide )
-{
-	Log_Stub( LOG_VJolt );
-	return 0;
-}
-
-int JoltPhysicsCollision::CollideWrite( char *pDest, CPhysCollide *pCollide, bool bSwap /*= false*/ )
-{
-	Log_Stub( LOG_VJolt );
-	return 0;
-}
-
-CPhysCollide *JoltPhysicsCollision::UnserializeCollide( char *pBuffer, int size, int index )
-{
-	Log_Stub( LOG_VJolt );
-	return nullptr;
-}
-
-//-------------------------------------------------------------------------------------------------
-
 float JoltPhysicsCollision::CollideVolume( CPhysCollide *pCollide )
 {
 	return JoltToSource::Volume( pCollide->ToShape()->GetVolume() );
@@ -315,9 +297,9 @@ void JoltPhysicsCollision::CollideSetOrthographicAreas( CPhysCollide *pCollide, 
 
 int JoltPhysicsCollision::CollideIndex( const CPhysCollide *pCollide )
 {
-	// Slart: Only used by code behind #ifdef _DEBUG
-	Log_Stub( LOG_VJolt );
-	return 0;
+	const JPH::Shape *shape = pCollide->ToShape();
+	VJoltAssert( ( shape->GetType() == JPH::EShapeType::Convex && shape->GetSubType() == JPH::EShapeSubType::ConvexHull ) || ( shape->GetType() == JPH::EShapeType::Compound && shape->GetSubType() == JPH::EShapeSubType::StaticCompound ) );
+	return static_cast<int>( shape->GetUserData() >> 32 );
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -494,6 +476,7 @@ namespace ivp_compat
 	static constexpr int	IVP_COMPACT_SURFACE_ID_SWAPPED		= MAKEID('S','P','V','I');
 	static constexpr int	IVP_COMPACT_MOPP_ID					= MAKEID('M','O','P','P');
 	static constexpr int	VPHYSICS_COLLISION_ID				= MAKEID('V','P','H','Y');
+	static constexpr int	JOLT_COLLISION_ID					= MAKEID('J','P','H','Y');
 	static constexpr short	VPHYSICS_COLLISION_VERSION			= 0x0100;
 
 	enum
@@ -504,7 +487,7 @@ namespace ivp_compat
 		COLLIDE_VIRTUAL = 3,
 	};
 
-	JPH::ConvexShape *IVPLedgeToConvexShape( const compactledge_t *pLedge )
+	JPH::ConvexShape *IVPLedgeToConvexShape( const compactledge_t *pLedge, uint64 userData )
 	{
 		if ( !pLedge->n_triangles )
 			return nullptr;
@@ -550,7 +533,7 @@ namespace ivp_compat
 			}
 		}
 		
-		pConvexShape->SetUserData( pLedge->client_data );
+		pConvexShape->SetUserData( pLedge->client_data | userData );
 		return pConvexShape;
 	}
 
@@ -568,7 +551,7 @@ namespace ivp_compat
 			vecOut.AddToTail( pNode->GetCompactLedge() );
 	}
 
-	CPhysCollide *DeserializeIVP_Poly( const compactsurface_t* pSurface )
+	CPhysCollide *DeserializeIVP_Poly( const compactsurface_t* pSurface, uint64 userData )
 	{
 		const compactledgenode_t *pFirstLedgeNode = reinterpret_cast< const compactledgenode_t * >(
 				reinterpret_cast< const char * >( pSurface ) + pSurface->offset_ledgetree_root );
@@ -584,29 +567,138 @@ namespace ivp_compat
 			// One compound convex per ledge.
 			for ( int i = 0; i < ledges.Count(); i++ )
 			{
-				const JPH::Shape* pShape = IVPLedgeToConvexShape( ledges[i] );
+				const JPH::Shape* pShape = IVPLedgeToConvexShape( ledges[i], userData );
 				// Josh:
 				// Some models have degenerate convexes which fails to make
 				// a subshape in Jolt, so we need to ignore those ledges.
 				if ( pShape )
 					settings.AddShape( JPH::Vec3::sZero(), JPH::Quat::sIdentity(), pShape );
 			}
-			CPhysCollide* pCollide = ShapeSettingsToPhysCollide( settings );
-			return pCollide;
+			JPH::Shape *shape = ShapeSettingsToShape<JPH::Shape>( settings );
+			shape->SetUserData( userData );
+			return CPhysCollide::FromShape( shape );
 		}
 		else
 		{
-			JPH::ConvexShape *pShape = IVPLedgeToConvexShape( ledges[ 0 ] );
-			return CPhysConvex::FromConvexShape( pShape )->ToPhysCollide();
+			JPH::ConvexShape *pShape = IVPLedgeToConvexShape( ledges[ 0 ], userData );
+			return CPhysCollide::FromShape( pShape );
 		}
 	}
 
-	CPhysCollide *DeserializeIVP_Poly( const collideheader_t *pCollideHeader )
+	CPhysCollide *DeserializeIVP_Poly( const collideheader_t *pCollideHeader, uint64 userData )
 	{
 		const compactsurfaceheader_t *pSurfaceHeader = reinterpret_cast< const compactsurfaceheader_t* >( pCollideHeader + 1 );
 		const compactsurface_t *pSurface = reinterpret_cast< const compactsurface_t* >( pSurfaceHeader + 1 );
 
-		return DeserializeIVP_Poly( pSurface );
+		return DeserializeIVP_Poly( pSurface, userData );
+	}
+
+	CPhysCollide *Deserialize( const char *pCursor, int solidSize, unsigned int i )
+	{
+		const collideheader_t *pCollideHeader = reinterpret_cast<const collideheader_t *>( pCursor );
+		uint64 userData = static_cast<uint64>( i ) << 32ULL;
+
+		if ( pCollideHeader->vphysicsID == VPHYSICS_COLLISION_ID )
+		{
+			// This is the main path that everything falls down for a modern
+			// .phy file with the collide header.
+
+			if ( pCollideHeader->version != VPHYSICS_COLLISION_VERSION )
+				Log_Warning( LOG_VJolt, "Solid with unknown version: 0x%x, may crash!\n", pCollideHeader->version );
+
+			switch ( pCollideHeader->modelType )
+			{
+				case COLLIDE_POLY:
+					return DeserializeIVP_Poly( pCollideHeader, userData );
+					break;
+
+				case COLLIDE_MOPP:
+					Log_Warning( LOG_VJolt, "Unsupported solid type COLLIDE_MOPP on solid %d. Skipping...\n", i );
+					break;
+	
+				case COLLIDE_BALL:
+					Log_Warning( LOG_VJolt, "Unsupported solid type COLLIDE_BALL on solid %d. Skipping...\n", i );
+					break;
+
+				case COLLIDE_VIRTUAL:
+					Log_Warning( LOG_VJolt, "Unsupported solid type COLLIDE_VIRTUAL on solid %d. Skipping...\n", i );
+					break;
+
+				default:
+					Log_Warning( LOG_VJolt, "Unsupported solid type 0x%x on solid %d. Skipping...\n", (int)pCollideHeader->modelType, i );
+					break;
+			}
+		}
+		else if ( pCollideHeader->vphysicsID == JOLT_COLLISION_ID )
+		{
+			VJoltAssert( pCollideHeader->version == 1 );
+			struct Reader : JPH::StreamIn, CUtlBuffer
+			{
+				using CUtlBuffer::CUtlBuffer;
+
+				void ReadBytes( void *outData, size_t inNumBytes ) override
+				{
+					Get( outData, inNumBytes );
+				}
+
+				bool IsEOF() const override
+				{
+					return TellGet() == TellMaxPut();
+				}
+
+				bool IsFailed() const override
+				{
+					return !IsValid();
+				}
+			} reader( pCollideHeader + 1, solidSize - sizeof( collideheader_t ), CUtlBuffer::READ_ONLY );
+
+			JPH::Shape::ShapeResult shape = JPH::Shape::sRestoreFromBinaryState( reader );
+			if ( shape.HasError() )
+			{
+				Log_Warning( LOG_VJolt, "Jolt collide deserialize error: %s\n", shape.GetError().c_str() );
+				return nullptr;
+			}
+			const int subShapeCount = reader.GetInt();
+			JPH::ShapeList subShapes;
+			for ( int j = 0; j < subShapeCount; ++j )
+			{
+				JPH::Shape::ShapeResult subShape = JPH::Shape::sRestoreFromBinaryState( reader );
+				if ( subShape.HasError() )
+				{
+					Log_Warning( LOG_VJolt, "Jolt collide deserialize error: %s\n", shape.GetError().c_str() );
+					return nullptr;
+				}
+				subShapes.emplace_back( subShape.Get() );
+			}
+			shape.Get()->RestoreSubShapeState( subShapes.data(), subShapeCount );
+			return CPhysCollide::FromShape( ToDanglingRef( shape.Get() ) );
+		}
+		else
+		{
+			// This must be a legacy style .phy where it is just a dumped compact surface.
+			// Some props in shipping HL2 still use this format, as they have a .phy, even after their
+			// .qc had the $collisionmodel removed, as they didn't get the stale .phy in the game files deleted.
+
+			const compactsurface_t *pCompactSurface = reinterpret_cast<const compactsurface_t *>( pCursor );
+			const int legacyModelType = pCompactSurface->dummy[2];
+			switch ( legacyModelType )
+			{
+				case IVP_COMPACT_SURFACE_SUPER_LEGACY:
+				case IVP_COMPACT_SURFACE_ID:
+				case IVP_COMPACT_SURFACE_ID_SWAPPED:
+					return DeserializeIVP_Poly( pCompactSurface, userData );
+					break;
+
+				case IVP_COMPACT_MOPP_ID:
+					Log_Warning( LOG_VJolt, "Unsupported legacy solid type IVP_COMPACT_MOPP_ID on solid %d. Skipping...\n", i );
+					break;
+
+				default:
+					Log_Warning( LOG_VJolt, "Unsupported legacy solid type 0x%x on solid %d. Skipping...\n", legacyModelType, i);
+					break;
+			}
+		}
+		return nullptr;
 	}
 }
 
@@ -624,71 +716,10 @@ void JoltPhysicsCollision::VCollideLoad( vcollide_t *pOutput, int solidCount, co
 	const char *pCursor = pBuffer;
 	for ( int i = 0; i < solidCount; i++ )
 	{
-		// Be safe ahead of time as so much can go wrong with
-		// this mess! :p
-		pOutput->solids[ i ] = nullptr;
-
 		const int solidSize = *reinterpret_cast<const int *>( pCursor );
 		pCursor += sizeof( int );
 
-		const ivp_compat::collideheader_t *pCollideHeader = reinterpret_cast<const ivp_compat::collideheader_t *>( pCursor );
-
-		if ( pCollideHeader->vphysicsID == ivp_compat::VPHYSICS_COLLISION_ID )
-		{
-			// This is the main path that everything falls down for a modern
-			// .phy file with the collide header.
-
-			if ( pCollideHeader->version != ivp_compat::VPHYSICS_COLLISION_VERSION )
-				Log_Warning( LOG_VJolt, "Solid with unknown version: 0x%x, may crash!\n", pCollideHeader->version );
-
-			switch ( pCollideHeader->modelType )
-			{
-				case ivp_compat::COLLIDE_POLY:
-					pOutput->solids[ i ] = DeserializeIVP_Poly( pCollideHeader );
-					break;
-
-				case ivp_compat::COLLIDE_MOPP:
-					Log_Warning( LOG_VJolt, "Unsupported solid type COLLIDE_MOPP on solid %d. Skipping...\n", i );
-					break;
-	
-				case ivp_compat::COLLIDE_BALL:
-					Log_Warning( LOG_VJolt, "Unsupported solid type COLLIDE_BALL on solid %d. Skipping...\n", i );
-					break;
-
-				case ivp_compat::COLLIDE_VIRTUAL:
-					Log_Warning( LOG_VJolt, "Unsupported solid type COLLIDE_VIRTUAL on solid %d. Skipping...\n", i );
-					break;
-
-				default:
-					Log_Warning( LOG_VJolt, "Unsupported solid type 0x%x on solid %d. Skipping...\n", (int)pCollideHeader->modelType, i );
-					break;
-			}
-		}
-		else
-		{
-			// This must be a legacy style .phy where it is just a dumped compact surface.
-			// Some props in shipping HL2 still use this format, as they have a .phy, even after their
-			// .qc had the $collisionmodel removed, as they didn't get the stale .phy in the game files deleted.
-
-			const ivp_compat::compactsurface_t *pCompactSurface = reinterpret_cast<const ivp_compat::compactsurface_t *>( pCursor );
-			const int legacyModelType = pCompactSurface->dummy[2];
-			switch ( legacyModelType )
-			{
-				case ivp_compat::IVP_COMPACT_SURFACE_SUPER_LEGACY:
-				case ivp_compat::IVP_COMPACT_SURFACE_ID:
-				case ivp_compat::IVP_COMPACT_SURFACE_ID_SWAPPED:
-					pOutput->solids[i] = DeserializeIVP_Poly( pCompactSurface );
-					break;
-
-				case ivp_compat::IVP_COMPACT_MOPP_ID:
-					Log_Warning( LOG_VJolt, "Unsupported legacy solid type IVP_COMPACT_MOPP_ID on solid %d. Skipping...\n", i );
-					break;
-
-				default:
-					Log_Warning( LOG_VJolt, "Unsupported legacy solid type 0x%x on solid %d. Skipping...\n", legacyModelType, i);
-					break;
-			}
-		}
+		pOutput->solids[ i ] = ivp_compat::Deserialize( pCursor, solidSize, i );
 
 		pCursor += solidSize;
 	}
@@ -705,7 +736,6 @@ void JoltPhysicsCollision::VCollideLoad( vcollide_t *pOutput, int solidCount, co
 #ifdef GAME_ASW_OR_NEWER
 	pOutput->pUserData = nullptr;
 #endif
-
 }
 
 void JoltPhysicsCollision::VCollideUnload( vcollide_t *pVCollide )
@@ -717,6 +747,75 @@ void JoltPhysicsCollision::VCollideUnload( vcollide_t *pVCollide )
 	delete[] pVCollide->solids;
 	delete[] pVCollide->pKeyValues;
 	V_memset( pVCollide, 0, sizeof( *pVCollide ) );
+}
+
+int JoltPhysicsCollision::CollideSize( CPhysCollide *pCollide )
+{
+	struct SizeCounter : JPH::StreamOut
+	{
+		void WriteBytes( const void *, size_t inNumBytes ) override
+		{
+			bytes += inNumBytes;
+		}
+
+		bool IsFailed() const override
+		{
+			return false;
+		}
+
+		size_t bytes = 0;
+	} counter;
+
+	counter.bytes += sizeof( ivp_compat::collideheader_t );
+	pCollide->ToShape()->SaveBinaryState( counter );
+	counter.bytes += sizeof( int );
+	JPH::ShapeList subShapes;
+	pCollide->ToShape()->SaveSubShapeState( subShapes );
+	for ( const auto &s : subShapes )
+		s->SaveBinaryState( counter );
+
+	return static_cast<int>( counter.bytes );
+}
+
+int JoltPhysicsCollision::CollideWrite( char *pDest, CPhysCollide *pCollide, bool bSwap /*= false*/ )
+{
+	if ( bSwap )
+	{
+		Log_Error( LOG_VJolt, "If you got here. Tell me what you did!\n" );
+		return 0;
+	}
+
+	struct Writer : JPH::StreamOut, CUtlBuffer
+	{
+		using CUtlBuffer::CUtlBuffer;
+
+		void WriteBytes( const void *inData, size_t inNumBytes ) override
+		{
+			Put( inData, inNumBytes );
+		}
+
+		bool IsFailed() const override
+		{
+			return !IsValid();
+		}
+	} writer;
+
+	constexpr ivp_compat::collideheader_t header { ivp_compat::JOLT_COLLISION_ID, 1, 0 };
+	writer.Put( &header, sizeof( header ) );
+	pCollide->ToShape()->SaveBinaryState( writer );
+	JPH::ShapeList subShapes;
+	writer.PutInt( static_cast<int>( subShapes.size() ) );
+	pCollide->ToShape()->SaveSubShapeState( subShapes );
+	for ( const auto &s : subShapes )
+		s->SaveBinaryState( writer );
+
+	memcpy( pDest, writer.Base(), writer.TellMaxPut() );
+	return writer.TellMaxPut();
+}
+
+CPhysCollide *JoltPhysicsCollision::UnserializeCollide( char *pBuffer, int size, int index )
+{
+	return ivp_compat::Deserialize( pBuffer, size, index );
 }
 
 //-------------------------------------------------------------------------------------------------
