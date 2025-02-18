@@ -98,6 +98,10 @@ JoltPhysicsSurfaceProps::JoltPhysicsSurfaceProps()
 	prop.data.physics.thickness		= 0.0f;
 	prop.data.physics.dampening		= 0.0f;
 	m_SurfaceProps[ "default" ] = prop;
+
+	// Game code uses 0 as invalid index, expects empty string
+	m_SoundStrings.AddString("");
+
 }
 
 //-------------------------------------------------------------------------------------------------
