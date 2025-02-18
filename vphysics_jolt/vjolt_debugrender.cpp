@@ -47,9 +47,12 @@ JoltPhysicsDebugRenderer::~JoltPhysicsDebugRenderer()
 
 JoltPhysicsDebugRenderer::BatchImpl::~BatchImpl()
 {
-	CMatRenderContextPtr pRenderContext(g_pMaterialSystem);
+	if ( !g_pMaterialSystem )
+		return;
+
+	CMatRenderContextPtr pRenderContext( g_pMaterialSystem );
 	for (int i = 0; i < m_Meshes.Count(); i++)
-		pRenderContext->DestroyStaticMesh(m_Meshes[i]);
+		pRenderContext->DestroyStaticMesh( m_Meshes[i] );
 }
 
 void JoltPhysicsDebugRenderer::DrawLine( JPH::Vec3Arg inFrom, JPH::Vec3Arg inTo, JPH::ColorArg inColor )
