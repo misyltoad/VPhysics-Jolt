@@ -823,7 +823,7 @@ CPhysCollide *JoltPhysicsCollision::CreateVirtualMesh( const virtualmeshparams_t
 		vertexList[i] = SourceToJolt::DistanceFloat3( meshList.pVerts[i] );
 
 	JPH::IndexedTriangleList indexedTriangleList;
-	indexedTriangleList.resize( meshList.indexCount * 2 );
+	indexedTriangleList.resize( meshList.triangleCount * 2 );
 
 	for ( int i = 0; i < meshList.triangleCount; ++i )
 	{
