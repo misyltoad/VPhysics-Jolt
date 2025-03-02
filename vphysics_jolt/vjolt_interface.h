@@ -11,7 +11,7 @@
 // Whether to use the VPhysics debug overlay (legacy compatible) or the fully featured IVDebugOverlay
 // In Desolation, IVDebugOverlay has new members that allow us to draw IMesh objects, without this
 // debugoverlay rendering is incredibly inefficient (and may run the materialsystem mempool out of memory)
-#if !defined( GAME_DESOLATION ) || defined( BUILD_FOR_EXTERNAL_GAME )
+#if !defined( GAME_VITAMIN ) || defined( BUILD_FOR_EXTERNAL_GAME )
 #define VJOLT_USE_PHYSICS_DEBUG_OVERLAY
 #endif
 
