@@ -31,7 +31,8 @@ static ConVar vjolt_debugrender_picture_in_picture( "vjolt_debugrender_picture_i
 static ConVar vjolt_debugrender_clear_rt( "vjolt_debugrender_clear_rt", "1" );
 static ConVar vjolt_debugrender_clear_depth( "vjolt_debugrender_clear_depth", "1" );
 static ConVar vjolt_debugrender_wireframe( "vjolt_debugrender_wireframe", "0" );
-static ConVar vjolt_debugrender_color_mode( "vjolt_debugrender_color_mode", "instance", 0, "One of instance, shape_type, motion_type, sleep, island, material." );
+static ConVar vjolt_debugrender_color_mode("vjolt_debugrender_color_mode", "instance", 0, "One of instance, shape_type, motion_type, sleep, island, material."); 
+static ConVar vjolt_debugrender_shaded( "vjolt_debugrender_shaded", "1", 0, "Use shading in the debug overlay. Requires map restart to take effect." );
 #endif
 
 //-------------------------------------------------------------------------------------------------
@@ -72,6 +73,13 @@ void JoltPhysicsDebugRenderer::DrawTriangle( JPH::Vec3Arg inV1, JPH::Vec3Arg inV
 	//DrawTriangle_Internal( JPH::Float3( inV1.GetX(), inV1.GetY(), inV1.GetZ() ), JPH::Float3( inV2.GetX(), inV2.GetY(), inV2.GetZ() ), JPH::Float3( inV3.GetX(), inV3.GetY(), inV3.GetZ() ), inColor );
 }
 
+//-----------------------------------------------------------------------------
+static float LightPlane( Vector& Normal )
+{
+	static Vector Light = Vector( 1.0f, 2.0f, 3.0f ).Normalized();
+	return 0.65f + ( 0.35f * DotProduct( Normal, Light ) );
+}
+
 JoltPhysicsDebugRenderer::Batch JoltPhysicsDebugRenderer::CreateTriangleBatch( const Triangle* inTriangles, int inTriangleCount )
 {
 #ifndef VJOLT_USE_PHYSICS_DEBUG_OVERLAY
@@ -105,10 +113,21 @@ JoltPhysicsDebugRenderer::Batch JoltPhysicsDebugRenderer::CreateTriangleBatch( c
 			for (int idx = 0; idx < vertCount; ++idx)
 			{
 				int i = firstVertex + idx;
+
+				Vector color{
+					float( inVertices[i].mColor.r ) / 255.f,
+					float( inVertices[i].mColor.g ) / 255.f,
+					float( inVertices[i].mColor.b ) / 255.f,
+				};
+				Vector normal{ inVertices[i].mNormal.x, inVertices[i].mNormal.y, inVertices[i].mNormal.z };
+
+				if ( vjolt_debugrender_shaded.GetBool() )
+					color *= LightPlane( normal );
+
 				meshBuilder.Position3f  ( inVertices[i].mPosition.x * JoltToSource::Factor, inVertices[i].mPosition.y * JoltToSource::Factor, inVertices[i].mPosition.z * JoltToSource::Factor );
-				meshBuilder.Normal3f    ( inVertices[i].mNormal.x, inVertices[i].mNormal.y, inVertices[i].mNormal.z );
+				meshBuilder.Normal3fv	( normal.Base() );
 				meshBuilder.TexCoord2f  ( 0, inVertices[i].mUV.x, inVertices[i].mUV.y );
-				meshBuilder.Color4Packed( inVertices[i].mColor.mU32 );
+				meshBuilder.Color3fv	( color.Base() );
 				meshBuilder.AdvanceVertex();
 			}
 		}
@@ -143,10 +162,20 @@ JoltPhysicsDebugRenderer::Batch JoltPhysicsDebugRenderer::CreateTriangleBatch( c
 	{
 		for (int i = 0; i < inVertexCount; ++i)
 		{
+			Vector color {
+				float(inVertices[i].mColor.r) / 255.f,
+				float(inVertices[i].mColor.g) / 255.f,
+				float(inVertices[i].mColor.b) / 255.f,
+			};
+			Vector normal { inVertices[i].mNormal.x, inVertices[i].mNormal.y, inVertices[i].mNormal.z };
+
+			if (vjolt_debugrender_shaded.GetBool())
+				color *= LightPlane(normal);
+
 			meshBuilder.Position3f  ( inVertices[i].mPosition.x * JoltToSource::Factor, inVertices[i].mPosition.y * JoltToSource::Factor, inVertices[i].mPosition.z * JoltToSource::Factor );
-			meshBuilder.Normal3f    ( inVertices[i].mNormal.x, inVertices[i].mNormal.y, inVertices[i].mNormal.z );
+			meshBuilder.Normal3fv   ( normal.Base() );
 			meshBuilder.TexCoord2f  ( 0, inVertices[i].mUV.x, inVertices[i].mUV.y );
-			meshBuilder.Color4Packed( inVertices[i].mColor.mU32 );
+			meshBuilder.Color3fv	( color.Base() );
 			meshBuilder.AdvanceVertex();
 		}
 
