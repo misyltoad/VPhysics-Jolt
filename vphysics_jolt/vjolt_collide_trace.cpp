@@ -25,7 +25,7 @@ static constexpr float kCollisionTolerance = 1.0e-3f;
 static constexpr float kCharacterPadding = 0.02f;
 
 // Also in vjolt_collide.cpp, should unify or just remove entirely
-static constexpr float kMaxConvexRadius = JPH::cDefaultConvexRadius;
+static constexpr float kMaxConvexRadius = SourceToJolt::Distance( DIST_EPSILON * 2.0f );
 
 static ConVar vjolt_trace_debug( "vjolt_trace_debug", "0", FCVAR_CHEAT );
 static ConVar vjolt_trace_debug_castray( "vjolt_trace_debug_castray", "0", FCVAR_CHEAT );
@@ -33,12 +33,17 @@ static ConVar vjolt_trace_debug_collidepoint( "vjolt_trace_debug_collidepoint", 
 static ConVar vjolt_trace_debug_castbox( "vjolt_trace_debug_castbox", "0", FCVAR_CHEAT );
 static ConVar vjolt_trace_debug_collidebox( "vjolt_trace_debug_collidebox", "0", FCVAR_CHEAT );
 
+static ConVar vjolt_trace_debug_castbox_only_fails( "vjolt_trace_debug_castbox_only_fails", "0", FCVAR_CHEAT );
+static ConVar vjolt_trace_debug_castbox_only_hits( "vjolt_trace_debug_castbox_only_hits", "0", FCVAR_CHEAT );
+
 // Josh: Enables a hack to make portals work. For some reason when we enable colliding with
 // backfaces, the player gets easily stuck in all sorts of things!
 // Slart and I have not been able to determine the root cause of this problem and have tried for a long time...
 //
 // Slart: Portal 2 probably passes in a bad winding order in the polyhedron or something, dunno if it affects Portal 1
 static ConVar vjolt_trace_portal_hack( "vjolt_trace_portal_hack", "0", FCVAR_NONE );
+
+static ConVar vjolt_trace_castbox_backface_force( "vjolt_trace_castbox_backface_force", "0", FCVAR_NONE );
 
 //-------------------------------------------------------------------------------------------------
 //
@@ -202,8 +207,9 @@ public:
 class ContentsCollector_CastShape final : public JPH::CastShapeCollector
 {
 public:
-	ContentsCollector_CastShape( const JPH::Shape *pShape, uint32 contentsMask, IConvexInfo *pConvexInfo )
-		: m_pShape( pShape ), m_ContentsMask( contentsMask ), m_pConvexInfo( pConvexInfo ) {}
+	ContentsCollector_CastShape( const JPH::Shape *pShape, uint32 contentsMask, IConvexInfo *pConvexInfo, JPH::Vec3Arg vDisplacement )
+		: m_pShape( pShape ), m_ContentsMask( contentsMask ), m_pConvexInfo( pConvexInfo ), m_vDisplacement{ vDisplacement } {
+	}
 
 	void AddHit( const JPH::ShapeCastResult &inResult ) override
 	{
@@ -213,6 +219,7 @@ public:
 		// Ensure that the contents filter was used
 		VJoltAssert( contents & m_ContentsMask );
 
+#if 0
 		// Test if this collision is closer than the previous one
 		const float theirEarlyOut = inResult.GetEarlyOutFraction();
 		const float ourEarlyOut = GetEarlyOutFraction();
@@ -231,6 +238,35 @@ public:
 			m_DidHit = true;
 			m_HitBackFace = inResult.mIsBackFaceHit;
 		}
+#endif
+
+		const float theirEarlyOut = inResult.GetEarlyOutFraction();
+		if ( theirEarlyOut < 0.0f )
+			m_bStartSolid = true;
+
+		if ( inResult.mPenetrationAxis.Dot( m_vDisplacement ) > 0.0f ) // Ignore penetrations that we're moving away from
+		{
+			// Test if this collision is closer than the previous one
+			const float ourEarlyOut = GetEarlyOutFraction();
+			if ( !m_DidHit || theirEarlyOut < ourEarlyOut )
+			{
+				// Update our early out fraction
+				UpdateEarlyOutFraction( theirEarlyOut );
+
+				m_Fraction = inResult.mFraction;
+				m_ResultContents = contents;
+				m_SubShapeID = inResult.mSubShapeID2;
+				m_ContactPoint = inResult.mContactPointOn2;
+				m_PenetrationAxis = inResult.mPenetrationAxis;
+				m_PenetrationDepth = inResult.mPenetrationDepth;
+
+				m_DidHit = true;
+				m_HitBackFace = inResult.mIsBackFaceHit;
+
+				if ( ourEarlyOut < 0.0f )
+					m_bEndSolid = true;
+			}
+		}
 	}
 
 private:
@@ -238,6 +274,7 @@ private:
 	const JPH::Shape *	m_pShape = nullptr;
 	uint32				m_ContentsMask = 0;
 	IConvexInfo *		m_pConvexInfo = nullptr;
+	JPH::Vec3			m_vDisplacement;
 
 public:
 	// Outputs (only use if m_DidHit is true)
@@ -250,6 +287,9 @@ public:
 
 	bool				m_DidHit = false;				// Set to true if we hit anything
 	bool				m_HitBackFace = false;			// Set to true if the hit was against a backface
+
+	bool				m_bStartSolid = false;
+	bool				m_bEndSolid = false;
 };
 
 //
@@ -339,7 +379,7 @@ static void CastRay( const Ray_t &ray, uint32 contentsMask, IConvexInfo *pConvex
 
 	// Set-up the settings
 	JPH::RayCastSettings settings;
-	settings.mBackFaceMode = JPH::EBackFaceMode::CollideWithBackFaces;
+	settings.SetBackFaceMode( JPH::EBackFaceMode::CollideWithBackFaces );
 	settings.mTreatConvexAsSolid = true;
 
 	//
@@ -487,6 +527,7 @@ static void CastBoxVsShape( const Ray_t &ray, uint32 contentsMask, IConvexInfo *
 
 	JPH::BoxShape boxShape( halfExtent, kMaxConvexRadius );
 	JPH::ShapeCast shapeCast( &boxShape, JPH::Vec3::sReplicate( 1.0f ), JPH::Mat44::sTranslation( origin ), direction );
+	//JPH::ShapeCast shapeCast = JPH::ShapeCast::sFromWorldTransform( &boxShape, JPH::Vec3::sReplicate( 1.0f ), JPH::Mat44::sTranslation( origin ), direction );
 
 	JPH::ShapeCastSettings settings;
 	//settings.mBackFaceModeTriangles = JPH::EBackFaceMode::CollideWithBackFaces;
@@ -494,37 +535,47 @@ static void CastBoxVsShape( const Ray_t &ray, uint32 contentsMask, IConvexInfo *
 	// Come back here if we start getting stuck on things again...
 	if ( vjolt_trace_portal_hack.GetBool() )
 		settings.mBackFaceModeConvex = JPH::EBackFaceMode::CollideWithBackFaces;
+	if ( vjolt_trace_castbox_backface_force.GetBool() )
+		settings.SetBackFaceMode( JPH::EBackFaceMode::CollideWithBackFaces );
 	//settings.mCollisionTolerance = kCollisionTolerance;
 	settings.mUseShrunkenShapeAndConvexRadius = true;
-	settings.mReturnDeepestPoint = true;
+	settings.mReturnDeepestPoint = false;
+	//settings.mReturnDeepestPoint = true;
+
+	//settings.mActiveEdgeMode = JPH::EActiveEdgeMode::CollideWithAll;
+	//settings.mCollectFacesMode = JPH::ECollectFacesMode::CollectFaces;
+	//settings.mActiveEdgeMode = JPH::EActiveEdgeMode::CollideOnlyWithActive;
+	//settings.mBackFaceModeConvex = JPH::EBackFaceMode::IgnoreBackFaces;
 
 	ContentsFilter_Shape filter( pShape, contentsMask, pConvexInfo );
-	ContentsCollector_CastShape collector( pShape, contentsMask, pConvexInfo );
+	ContentsCollector_CastShape collector( pShape, contentsMask, pConvexInfo, direction );
 	JPH::CollisionDispatch::sCastShapeVsShapeWorldSpace( shapeCast, settings, pShape, JPH::Vec3::sReplicate( 1.0f ), filter, queryTransform, JPH::SubShapeIDCreator(), JPH::SubShapeIDCreator(), collector );
 
 	if ( collector.m_DidHit )
 	{
+		//JPH::Vec3 normal = collector.m_ContactNormal;
+		// JPH::Vec3 normal = queryTransform.GetRotation() * pShape->GetSurfaceNormal( collector.m_SubShapeID, joltRay.GetPointOnRay( collector.m_Fraction ) );
+		//JPH::Vec3 normal = queryTransform.GetRotation() * pShape->GetSurfaceNormal( collector.m_SubShapeID, collector.m_ContactPoint );
 		JPH::Vec3 normal = -( collector.m_PenetrationAxis.Normalized() );
 		pTrace->plane.normal = Vector( normal.GetX(), normal.GetY(), normal.GetZ() );
+		pTrace->fraction = collector.m_Fraction; //CalculateSourceFraction( ray.m_Delta, collector.m_Fraction, pTrace->plane.normal );
 
-		pTrace->fraction = CalculateSourceFraction( ray.m_Delta, collector.m_Fraction, pTrace->plane.normal );
-
-		//Log_Msg( LOG_VJolt, "Depth: %g, InitialFraction = %g, NewFraction = %g\n", collector.m_PenetrationDepth, flInitialFraction, pTrace->fraction );
+		Log_Msg( LOG_VJolt, "BoxCast Normal %g %g %g\n", normal.GetX(), normal.GetY(), normal.GetZ() );
 
 		pTrace->startpos = ray.m_Start + ray.m_StartOffset;
 		pTrace->endpos = pTrace->startpos + ( ray.m_Delta * pTrace->fraction );
 
-		pTrace->endpos -= pTrace->plane.normal * collector.m_PenetrationDepth;
+		//pTrace->endpos -= pTrace->plane.normal * collector.m_PenetrationDepth;
 
 		pTrace->plane.dist = DotProduct( pTrace->endpos, pTrace->plane.normal );
 		pTrace->contents = collector.m_ResultContents;
 			
 		// If penetrating more than DIST_EPSILON, consider it an intersection
 		//constexpr float PenetrationEpsilon = DIST_EPSILON;
-		static constexpr float kMinRequiredPenetration = 0.005f + kCharacterPadding;
+		static constexpr float kMinRequiredPenetration = SourceToJolt::Distance( DIST_EPSILON );
 
-		pTrace->allsolid = collector.m_PenetrationDepth > kMinRequiredPenetration && pTrace->fraction == 0.0f;
-		pTrace->startsolid = collector.m_PenetrationDepth > kMinRequiredPenetration && pTrace->fraction == 0.0f;
+		pTrace->allsolid   = collector.m_bStartSolid && collector.m_bEndSolid;
+		pTrace->startsolid = collector.m_bStartSolid;
 	}
 	else
 	{
@@ -547,14 +598,32 @@ static void CastBoxVsShape( const Ray_t &ray, uint32 contentsMask, IConvexInfo *
 
 		JPH::Color color( 255, 64, 64, 255 );
 
+		if ( collector.m_DidHit && vjolt_trace_debug_castbox_only_fails.GetBool() )
+			return;
+
+		if ( !collector.m_DidHit && vjolt_trace_debug_castbox_only_hits.GetBool() )
+			return;
+
+		JPH::Vec3 hitPos = origin + ( direction * collector.m_Fraction );
 		if ( collector.m_DidHit )
 		{
 			color.r = 64;
 			color.g = 255;
 
-			JPH::Vec3 hitPos = origin + ( direction * collector.m_Fraction );
-			debugRenderer.DrawArrow( hitPos, hitPos + collector.m_PenetrationAxis, JPH::Color::sRed, 0.3f );
+			debugRenderer.DrawArrow( hitPos, hitPos + -collector.m_PenetrationAxis.Normalized(), color, 0.3f);
 		}
+		else
+		{
+			debugRenderer.DrawArrow( origin, hitPos, color, 0.3f );
+		}
+
+		//JPH::Vec3 normal = queryTransform.GetRotation() * pShape->GetSurfaceNormal( collector.m_SubShapeID, collector.m_ContactPoint );
+		//debugRenderer.DrawArrow( hitPos, hitPos + normal, color, 0.3f );
+		//debugRenderer.DrawSphere( collector.m_ContactPoint, 0.5f, JPH::Color( 255, 255, 255, 127 ) );
+		JPH::Mat44 startTransform = JPH::Mat44::sTranslation( origin );
+		JPH::Mat44 endTransform = JPH::Mat44::sTranslation( hitPos );
+		debugRenderer.DrawBox( startTransform, boxShape.GetLocalBounds(), JPH::Color( 0, 255, 0, 127 ), JPH::DebugRenderer::ECastShadow::Off, JPH::DebugRenderer::EDrawMode::Wireframe );
+		debugRenderer.DrawBox( endTransform, boxShape.GetLocalBounds(), JPH::Color( 0, 0, 255, 127 ), JPH::DebugRenderer::ECastShadow::Off, JPH::DebugRenderer::EDrawMode::Wireframe );
 
 		boxShape.Draw( &debugRenderer, queryTransform, JPH::Vec3::sReplicate( 1.0f ), color, false, false );
 	}

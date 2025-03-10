@@ -33,6 +33,13 @@ static ConVar vjolt_debugrender_clear_depth( "vjolt_debugrender_clear_depth", "1
 static ConVar vjolt_debugrender_wireframe( "vjolt_debugrender_wireframe", "0" );
 static ConVar vjolt_debugrender_color_mode("vjolt_debugrender_color_mode", "instance", 0, "One of instance, shape_type, motion_type, sleep, island, material."); 
 static ConVar vjolt_debugrender_shaded( "vjolt_debugrender_shaded", "1", 0, "Use shading in the debug overlay. Requires map restart to take effect." );
+
+static ConCommand vjolt_debugrender_make_in_view_quick( "vjolt_debugrender_make_in_view_quick", []()
+{
+	vjolt_debugrender_picture_in_picture.SetValue( false );
+	vjolt_debugrender_clear_rt.SetValue( false );
+	vjolt_debugrender_clear_depth.SetValue( false );
+});
 #endif
 
 //-------------------------------------------------------------------------------------------------

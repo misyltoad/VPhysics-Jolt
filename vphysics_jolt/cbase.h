@@ -48,6 +48,8 @@
 #include <algorithm>
 #include <utility>
 #include <fstream>
+#include <unordered_map>
+#include <unordered_set>
 
 // Mathlib
 #include "mathlib/mathlib.h"
