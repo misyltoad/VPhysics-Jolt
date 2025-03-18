@@ -560,7 +560,7 @@ static void CastBoxVsShape( const Ray_t &ray, uint32 contentsMask, IConvexInfo *
 		pTrace->plane.normal = Vector( normal.GetX(), normal.GetY(), normal.GetZ() );
 		pTrace->fraction = collector.m_Fraction; //CalculateSourceFraction( ray.m_Delta, collector.m_Fraction, pTrace->plane.normal );
 
-		Log_Msg( LOG_VJolt, "BoxCast Normal %g %g %g\n", normal.GetX(), normal.GetY(), normal.GetZ() );
+		//Log_Msg( LOG_VJolt, "BoxCast Normal %g %g %g\n", normal.GetX(), normal.GetY(), normal.GetZ() );
 
 		pTrace->startpos = ray.m_Start + ray.m_StartOffset;
 		pTrace->endpos = pTrace->startpos + ( ray.m_Delta * pTrace->fraction );
