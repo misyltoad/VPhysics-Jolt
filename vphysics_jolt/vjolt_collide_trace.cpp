@@ -558,7 +558,7 @@ static void CastBoxVsShape( const Ray_t &ray, uint32 contentsMask, IConvexInfo *
 		//JPH::Vec3 normal = queryTransform.GetRotation() * pShape->GetSurfaceNormal( collector.m_SubShapeID, collector.m_ContactPoint );
 		JPH::Vec3 normal = -( collector.m_PenetrationAxis.Normalized() );
 		pTrace->plane.normal = Vector( normal.GetX(), normal.GetY(), normal.GetZ() );
-		pTrace->fraction = collector.m_Fraction; //CalculateSourceFraction( ray.m_Delta, collector.m_Fraction, pTrace->plane.normal );
+		pTrace->fraction = CalculateSourceFraction(ray.m_Delta, collector.m_Fraction, pTrace->plane.normal);
 
 		//Log_Msg( LOG_VJolt, "BoxCast Normal %g %g %g\n", normal.GetX(), normal.GetY(), normal.GetZ() );
 
