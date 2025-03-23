@@ -585,8 +585,11 @@ void JoltPhysicsSpring::OnJoltPhysicsObjectDestroyed( JoltPhysicsObject *pObject
 
 	// Raphael: As soon as one of the physics objects / bodies get destroyed, 
 	//          we need to remove the constraint or else it will crash on the next simulation.
-	m_pPhysicsSystem->RemoveConstraint( m_pConstraint );
-	m_pConstraint = nullptr;
+	if ( m_pConstraint )
+	{
+		m_pPhysicsSystem->RemoveConstraint( m_pConstraint );
+		m_pConstraint = nullptr;
+	}
 }
 
 //-------------------------------------------------------------------------------------------------
