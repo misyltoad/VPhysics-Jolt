@@ -14,9 +14,6 @@
 
 //-------------------------------------------------------------------------------------------------
 
-// Also in vjolt_collide_trace.cpp, should unify or just remove entirely
-static constexpr float kMaxConvexRadius = SourceToJolt::Distance( DIST_EPSILON * 2.0f );
-
 JoltPhysicsCollision JoltPhysicsCollision::s_PhysicsCollision;
 EXPOSE_SINGLE_INTERFACE_GLOBALVAR( JoltPhysicsCollision, IPhysicsCollision, VPHYSICS_COLLISION_INTERFACE_VERSION, JoltPhysicsCollision::GetInstance() );
 
@@ -148,8 +145,6 @@ void JoltPhysicsCollision::PolysoupDestroy( CPhysPolysoup *pSoup )
 
 void JoltPhysicsCollision::PolysoupAddTriangle( CPhysPolysoup *pSoup, const Vector &a, const Vector &b, const Vector &c, int materialIndex7bits )
 {
-	// Add both windings to make this two-faced.
-	pSoup->Triangles.push_back( JPH::Triangle( SourceToJolt::DistanceFloat3( c ), SourceToJolt::DistanceFloat3( b ), SourceToJolt::DistanceFloat3( a ) ) );
 	pSoup->Triangles.push_back( JPH::Triangle( SourceToJolt::DistanceFloat3( a ), SourceToJolt::DistanceFloat3( b ), SourceToJolt::DistanceFloat3( c ) ) );
 }
 

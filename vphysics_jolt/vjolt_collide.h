@@ -6,7 +6,11 @@
 
 #pragma once
 
+#include "coordsize.h"
+
 //-------------------------------------------------------------------------------------------------
+
+static constexpr float kMaxConvexRadius = SourceToJolt::Distance( DIST_EPSILON * 2.0f );
 
 // Dummy helper class to go back and forth.
 // Does not and will not contain *any* data.

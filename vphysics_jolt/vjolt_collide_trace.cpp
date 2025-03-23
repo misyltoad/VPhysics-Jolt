@@ -21,12 +21,6 @@
 namespace VJoltTrace
 {
 
-static constexpr float kCollisionTolerance = 1.0e-3f;
-static constexpr float kCharacterPadding = 0.02f;
-
-// Also in vjolt_collide.cpp, should unify or just remove entirely
-static constexpr float kMaxConvexRadius = SourceToJolt::Distance( DIST_EPSILON * 2.0f );
-
 static ConVar vjolt_trace_debug( "vjolt_trace_debug", "0", FCVAR_CHEAT );
 static ConVar vjolt_trace_debug_castray( "vjolt_trace_debug_castray", "0", FCVAR_CHEAT );
 static ConVar vjolt_trace_debug_collidepoint( "vjolt_trace_debug_collidepoint", "0", FCVAR_CHEAT );
@@ -527,7 +521,6 @@ static void CastBoxVsShape( const Ray_t &ray, uint32 contentsMask, IConvexInfo *
 
 	JPH::BoxShape boxShape( halfExtent, kMaxConvexRadius );
 	JPH::ShapeCast shapeCast( &boxShape, JPH::Vec3::sReplicate( 1.0f ), JPH::Mat44::sTranslation( origin ), direction );
-	//JPH::ShapeCast shapeCast = JPH::ShapeCast::sFromWorldTransform( &boxShape, JPH::Vec3::sReplicate( 1.0f ), JPH::Mat44::sTranslation( origin ), direction );
 
 	JPH::ShapeCastSettings settings;
 	//settings.mBackFaceModeTriangles = JPH::EBackFaceMode::CollideWithBackFaces;
@@ -537,15 +530,9 @@ static void CastBoxVsShape( const Ray_t &ray, uint32 contentsMask, IConvexInfo *
 		settings.mBackFaceModeConvex = JPH::EBackFaceMode::CollideWithBackFaces;
 	if ( vjolt_trace_castbox_backface_force.GetBool() )
 		settings.SetBackFaceMode( JPH::EBackFaceMode::CollideWithBackFaces );
-	//settings.mCollisionTolerance = kCollisionTolerance;
+	settings.mCollisionTolerance = SourceToJolt::Distance( 0.1f * 0.25f ); // Regular VPhysics uses 0.25" here for the "collision tolerance"/epsilon, but when actually testing, it uses 0.1 * epsilon, so provide that here.
 	settings.mUseShrunkenShapeAndConvexRadius = true;
 	settings.mReturnDeepestPoint = false;
-	//settings.mReturnDeepestPoint = true;
-
-	//settings.mActiveEdgeMode = JPH::EActiveEdgeMode::CollideWithAll;
-	//settings.mCollectFacesMode = JPH::ECollectFacesMode::CollectFaces;
-	//settings.mActiveEdgeMode = JPH::EActiveEdgeMode::CollideOnlyWithActive;
-	//settings.mBackFaceModeConvex = JPH::EBackFaceMode::IgnoreBackFaces;
 
 	ContentsFilter_Shape filter( pShape, contentsMask, pConvexInfo );
 	ContentsCollector_CastShape collector( pShape, contentsMask, pConvexInfo, direction );
@@ -553,27 +540,16 @@ static void CastBoxVsShape( const Ray_t &ray, uint32 contentsMask, IConvexInfo *
 
 	if ( collector.m_DidHit )
 	{
-		//JPH::Vec3 normal = collector.m_ContactNormal;
-		// JPH::Vec3 normal = queryTransform.GetRotation() * pShape->GetSurfaceNormal( collector.m_SubShapeID, joltRay.GetPointOnRay( collector.m_Fraction ) );
-		//JPH::Vec3 normal = queryTransform.GetRotation() * pShape->GetSurfaceNormal( collector.m_SubShapeID, collector.m_ContactPoint );
 		JPH::Vec3 normal = -( collector.m_PenetrationAxis.Normalized() );
 		pTrace->plane.normal = Vector( normal.GetX(), normal.GetY(), normal.GetZ() );
-		pTrace->fraction = CalculateSourceFraction(ray.m_Delta, collector.m_Fraction, pTrace->plane.normal);
-
-		//Log_Msg( LOG_VJolt, "BoxCast Normal %g %g %g\n", normal.GetX(), normal.GetY(), normal.GetZ() );
+		pTrace->fraction = CalculateSourceFraction( ray.m_Delta, collector.m_Fraction, pTrace->plane.normal );
 
 		pTrace->startpos = ray.m_Start + ray.m_StartOffset;
 		pTrace->endpos = pTrace->startpos + ( ray.m_Delta * pTrace->fraction );
 
-		//pTrace->endpos -= pTrace->plane.normal * collector.m_PenetrationDepth;
-
 		pTrace->plane.dist = DotProduct( pTrace->endpos, pTrace->plane.normal );
 		pTrace->contents = collector.m_ResultContents;
 			
-		// If penetrating more than DIST_EPSILON, consider it an intersection
-		//constexpr float PenetrationEpsilon = DIST_EPSILON;
-		static constexpr float kMinRequiredPenetration = SourceToJolt::Distance( DIST_EPSILON );
-
 		pTrace->allsolid   = collector.m_bStartSolid && collector.m_bEndSolid;
 		pTrace->startsolid = collector.m_bStartSolid;
 	}
@@ -589,7 +565,6 @@ static void CastBoxVsShape( const Ray_t &ray, uint32 contentsMask, IConvexInfo *
 	}
 
 #if defined JPH_DEBUG_RENDERER
-
 	// Debug trace visualizing
 	IVJoltDebugOverlay *pOverlay = JoltPhysicsInterface::GetInstance().GetDebugOverlay();
 	if ( vjolt_trace_debug.GetBool() && vjolt_trace_debug_castbox.GetBool() && pOverlay )
