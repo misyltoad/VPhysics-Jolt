@@ -43,7 +43,7 @@ jobs:
         msbuild jolt.sln /nodeReuse:false /t:Rebuild /p:Configuration=Release /p:Platform=x86 /m /v:minimal
 
     - name: Upload artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: vphysics_jolt_${{ matrix.source_branch }}_win32
         path: ${{ matrix.source_branch }}/game
@@ -87,7 +87,7 @@ jobs:
         make -f jolt.mak -j $(nproc)
 
     - name: Upload artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: vphysics_jolt_${{ matrix.source_branch }}_linux32
         path: ${{ matrix.source_branch }}/game
