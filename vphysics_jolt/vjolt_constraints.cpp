@@ -375,8 +375,8 @@ void JoltPhysicsConstraint::InitialiseRagdoll( IPhysicsConstraintGroup *pGroup, 
 		// Allow ~1deg either side to avoid joints glitching out.
 		settings.mTwistMinAngle = Min( limits.lAxisLimitsRad[0].Min, DEG2RAD( -1.0f ) );
 		settings.mTwistMaxAngle = Max( limits.lAxisLimitsRad[0].Max, DEG2RAD(  1.0f ) );
-		settings.mNormalHalfConeAngle = Max( 0.5f * ( limits.lAxisLimitsRad[ MatrixAxis::X ].GetRange() ), DEG2RAD( 1.0f ) );
-		settings.mPlaneHalfConeAngle = Max( 0.5f * ( limits.lAxisLimitsRad[ MatrixAxis::Y ].GetRange() ), DEG2RAD( 1.0f ) );
+		settings.mNormalHalfConeAngle = Max( 0.5f * ( limits.lAxisLimitsRad[1].GetRange() ), DEG2RAD( 1.0f ) );
+		settings.mPlaneHalfConeAngle = Max( 0.5f * ( limits.lAxisLimitsRad[2].GetRange() ), DEG2RAD( 1.0f ) );
 
 		settings.mSpace = JPH::EConstraintSpace::LocalToBodyCOM;
 
